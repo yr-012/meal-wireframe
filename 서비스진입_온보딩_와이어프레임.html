@@ -102,6 +102,15 @@ body {
 </style>
 </head>
 <body>
+<div id="pw-gate" style="position:fixed; inset:0; background:var(--bg); z-index:999; display:flex; align-items:center; justify-content:center; padding:24px;">
+  <div style="background:var(--surface); border-radius:var(--radius-card); padding:32px 24px; width:100%; max-width:320px; text-align:center; box-shadow:var(--shadow);">
+    <div style="font-size:32px; margin-bottom:12px;">🔒</div>
+    <div style="font-weight:800; color:var(--text); margin-bottom:16px;">비밀번호를 입력해주세요</div>
+    <input type="password" id="pw-gate-input" class="input-text" style="text-align:center; margin-bottom:12px;" placeholder="비밀번호" />
+    <button class="btn-primary" id="pw-gate-submit" style="margin-top:0;">입장하기</button>
+    <div id="pw-gate-error" style="color:#E0577D; font-size:13px; margin-top:10px; display:none;">비밀번호가 틀렸어요.</div>
+  </div>
+</div>
 <div class="device">
   <div class="statusbar"><span>2:41</span><span>📶 📡 🔋</span></div>
   <div class="screens" id="screens">
@@ -478,6 +487,27 @@ onEnter['OB-006'] = function () {
   document.getElementById('ob006-start').href =
     './홈_이후_와이어프레임.html?' + params.toString();
 };
+
+(function () {
+  const PASSWORD = 'sangsang';
+  const gate = document.getElementById('pw-gate');
+  const input = document.getElementById('pw-gate-input');
+  const submit = document.getElementById('pw-gate-submit');
+  const error = document.getElementById('pw-gate-error');
+  if (sessionStorage.getItem('sang-wireframe-unlocked') === '1') {
+    gate.style.display = 'none';
+  }
+  function tryUnlock() {
+    if (input.value === PASSWORD) {
+      sessionStorage.setItem('sang-wireframe-unlocked', '1');
+      gate.style.display = 'none';
+    } else {
+      error.style.display = 'block';
+    }
+  }
+  submit.onclick = tryUnlock;
+  input.onkeydown = function (e) { if (e.key === 'Enter') tryUnlock(); };
+})();
 
 /* HANDLERS */
 
