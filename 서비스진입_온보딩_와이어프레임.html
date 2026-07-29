@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>식단 관리 서비스 - 서비스진입/온보딩 와이어프레임</title>
+<style>
+:root {
+  --bg: #F0EEFB;
+  --surface: #FFFFFF;
+  --primary: #6C63FF;
+  --disabled-bg: #E3E3E8;
+  --disabled-text: #9B9BA5;
+  --text: #23233A;
+  --text-muted: #8A8A99;
+  --badge-mint-bg: #D9F2E6; --badge-mint-fg: #2FAE7C;
+  --badge-pink-bg: #FCE4E9; --badge-pink-fg: #E0577D;
+  --badge-blue-bg: #DCEEFB; --badge-blue-fg: #3B9FE0;
+  --badge-lav-bg: #E6E1FB; --badge-lav-fg: #6C63FF;
+  --shadow: 0 4px 16px rgba(60, 50, 120, 0.10);
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; }
+body {
+  font-family: var(--font);
+  background:#14142b;
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh;
+}
+.device {
+  width:390px; height:844px;
+  background:var(--bg);
+  border-radius:44px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 24px 64px rgba(0,0,0,0.45);
+  display:flex; flex-direction:column;
+  border:8px solid #0b0b18;
+}
+.statusbar {
+  display:flex; justify-content:space-between;
+  padding:18px 28px 6px;
+  font-weight:600; font-size:15px; color:var(--text);
+  flex-shrink:0;
+}
+.screens { flex:1; position:relative; }
+.screen {
+  display:none; position:absolute; inset:0;
+  flex-direction:column; overflow-y:auto;
+  padding:8px 24px 32px;
+}
+.screen.active { display:flex; }
+.headline { font-size:22px; font-weight:800; color:var(--text); margin:8px 0 4px; }
+.subtext { font-size:14px; color:var(--text-muted); margin:0 0 20px; line-height:1.5; }
+.card {
+  background:var(--surface); border-radius:var(--radius-card);
+  box-shadow:var(--shadow);
+  padding:16px 18px; margin-bottom:12px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer;
+}
+.badge-icon {
+  width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.badge-mint { background:var(--badge-mint-bg); color:var(--badge-mint-fg); }
+.badge-pink { background:var(--badge-pink-bg); color:var(--badge-pink-fg); }
+.badge-blue { background:var(--badge-blue-bg); color:var(--badge-blue-fg); }
+.badge-lav { background:var(--badge-lav-bg); color:var(--badge-lav-fg); }
+.card-label { flex:1; font-size:15px; font-weight:600; color:var(--text); }
+.card-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.check-circle {
+  width:24px; height:24px; border-radius:50%;
+  border:2px solid #D8D8E4; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:#fff;
+}
+.check-circle.checked { background:var(--primary); border-color:var(--primary); }
+.spacer { flex:1; }
+.btn-primary {
+  width:100%; padding:16px; border:none; border-radius:var(--radius-pill);
+  background:var(--primary); color:#fff; font-size:16px; font-weight:700;
+  cursor:pointer; margin-top:auto; flex-shrink:0;
+}
+.btn-primary:disabled { background:var(--disabled-bg); color:var(--disabled-text); cursor:not-allowed; }
+.btn-secondary {
+  width:100%; padding:14px; border:2px solid var(--primary); border-radius:var(--radius-pill);
+  background:transparent; color:var(--primary); font-size:15px; font-weight:700;
+  cursor:pointer; margin-top:8px; flex-shrink:0;
+}
+.link { color:var(--primary); font-size:14px; text-align:center; display:block; margin-top:12px; text-decoration:underline; cursor:pointer; background:none; border:none; padding:6px; flex-shrink:0; }
+.input-text {
+  width:100%; padding:16px; border-radius:16px; border:1px solid #E0E0EA;
+  font-size:16px; margin-bottom:16px; background:#fff; color:var(--text);
+}
+.input-text:focus { outline:2px solid var(--primary); }
+.skip-link { position:absolute; top:20px; right:24px; font-size:14px; color:var(--text-muted); background:none; border:none; cursor:pointer; z-index:5; }
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="statusbar"><span>2:41</span><span>📶 📡 🔋</span></div>
+  <div class="screens" id="screens">
+    <div class="screen" data-id="SC-001">
+  <div class="headline">구독번호를 입력해주세요</div>
+  <div class="subtext">델쥬아 구독 시 발급된 번호로 인증합니다. (데모: 00000=조회실패, 99999=해지구독자, 그 외 숫자=인증 성공)</div>
+  <input type="tel" inputmode="numeric" class="input-text" id="sub-input" placeholder="구독번호 입력" />
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sub-submit" disabled>인증하기</button>
+  <button class="link" id="sub-find">구독번호 확인하기</button>
+</div>
+
+<div class="screen" data-id="SC-002">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-lav" style="width:72px;height:72px;font-size:32px;margin:0 auto 20px;">🎉</div>
+  <div class="headline" style="text-align:center;">OOO님, 상상단과 함께할<br/>준비가 됐어요!</div>
+  <div class="subtext" style="text-align:center;">지금부터 나에게 딱 맞는<br/>단백질 목표를 설정해 드릴게요</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc002-start">맞춤 관리 시작하기</button>
+</div>
+
+<div class="screen" data-id="SC-003">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-pink" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">❗</div>
+  <div class="headline" style="text-align:center;">입력한 구독번호를<br/>찾을 수 없습니다.<br/>번호를 다시 확인해 주세요.</div>
+  <div class="subtext" style="text-align:center;">구독 중이 아니라면 델쥬아 닭가슴살면을<br/>구독한 후 이용하실 수 있습니다.</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc003-retry">다시 입력하기</button>
+  <button class="btn-secondary" id="sc003-find">구독번호 찾기</button>
+  <button class="link" id="sc003-buy">구독을 아직 안 하셨나요?</button>
+</div>
+
+<div class="screen" data-id="SC-004">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-pink" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">😮</div>
+  <div class="headline" style="text-align:center;">앗, 구독을<br/>중지하셨네요</div>
+  <div class="subtext" style="text-align:center;">서비스를 계속 이용하려면<br/>재구독이 필요합니다.</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc004-retry">다시 입력하기</button>
+  <button class="btn-secondary" id="sc004-find">구독번호 찾기</button>
+  <button class="link" id="sc004-buy">구독하러 가기</button>
+</div>
+<div class="screen" data-id="OB-001">
+  <button class="skip-link" id="ob001-skip">건너뛰기</button>
+  <div class="spacer"></div>
+  <div id="ob001-slide-1">
+    <div class="badge-icon badge-blue" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">🫀</div>
+    <div class="headline" style="text-align:center;">단백질은 근육만을 위한<br/>영양소가 아닙니다</div>
+    <div class="subtext" style="text-align:center;">몸을 구성하는 핵심 재료.<br/>부족하면 컨디션과 회복력까지 무너집니다</div>
+  </div>
+  <div id="ob001-slide-2" style="display:none;">
+    <div class="badge-icon badge-mint" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">🎯</div>
+    <div class="headline" style="text-align:center;">나에게 맞는 단백질 목표를,<br/>알려드릴게요</div>
+    <div class="subtext" style="text-align:center;">나에게 맞는 하루 목표를 채우며<br/>건강 자산을 하나씩 쌓아보세요</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob001-next">다음</button>
+</div>
+<div class="screen" data-id="OB-002-1">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-lav" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">🔔</div>
+  <div class="headline" style="text-align:center;">하루, 한 주 단위로<br/>단백질 섭취 리포트를 보내드려요</div>
+  <div class="subtext" style="text-align:center;">매일 오전 7시에 알림이 와요.<br/>(시간은 언제든 바꿀 수 있어요)</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob0021-allow">허용하기</button>
+  <button class="link" id="ob0021-later">나중에 할게요</button>
+</div>
+<div class="screen" data-id="OB-002-2">
+  <div class="headline">신체 정보를 알려주세요</div>
+  <div class="subtext">정확한 단백질 목표 계산에 사용돼요</div>
+  <div style="display:flex; gap:10px; margin-bottom:16px;">
+    <button class="btn-secondary" id="ob0022-male" style="margin-top:0; width:auto; flex:1;">남성</button>
+    <button class="btn-secondary" id="ob0022-female" style="margin-top:0; width:auto; flex:1;">여성</button>
+  </div>
+  <input type="tel" inputmode="numeric" class="input-text" id="ob0022-age" placeholder="나이 (만)" />
+  <input type="tel" inputmode="numeric" class="input-text" id="ob0022-height" placeholder="키 (cm)" />
+  <input type="tel" inputmode="numeric" class="input-text" id="ob0022-weight" placeholder="현재 체중 (kg)" />
+  <div class="subtext" style="margin-bottom:8px;">활동량을 선택해주세요</div>
+  <div id="ob0022-activity-list">
+    <div class="card" data-idx="0"><div class="badge-icon badge-blue">🪑</div><div><div class="card-label">사무직 (활동 거의 없음)</div><div class="card-sub">하루 대부분을 앉아서 보내요</div></div></div>
+    <div class="card" data-idx="1"><div class="badge-icon badge-blue">🚶</div><div><div class="card-label">가벼운 운동 주 1~2회</div><div class="card-sub">가벼운 산책, 스트레칭</div></div></div>
+    <div class="card" data-idx="2"><div class="badge-icon badge-blue">🏃</div><div><div class="card-label">주 3~5회 중강도 운동</div><div class="card-sub">조깅, 필라테스, 수영 등</div></div></div>
+    <div class="card" data-idx="3"><div class="badge-icon badge-blue">🏋️</div><div><div class="card-label">주 6~7회 고강도 운동</div><div class="card-sub">웨이트, 크로스핏, HIIT 등</div></div></div>
+    <div class="card" data-idx="4"><div class="badge-icon badge-blue">🔥</div><div><div class="card-label">매일 고강도 운동+육체노동</div><div class="card-sub">선수급 트레이닝, 현장직 등</div></div></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob0022-next" disabled>다음</button>
+</div>
+
+<div class="screen" data-id="OB-003">
+  <div class="headline">어떤 목적으로<br/>관리하고 싶으신가요?</div>
+  <div class="subtext">하나만 선택해주세요</div>
+  <div class="card" data-goal="maintain"><div class="badge-icon badge-mint">⚖️</div><div class="card-label">현재 상태 유지</div></div>
+  <div class="card" data-goal="lose"><div class="badge-icon badge-blue">📉</div><div class="card-label">건강한 체중 감량</div></div>
+  <div class="card" data-goal="gain"><div class="badge-icon badge-lav">💪</div><div class="card-label">근력 증가</div></div>
+</div>
+
+<div class="screen" data-id="OB-004">
+  <div class="headline">목표 체중을<br/>알려주세요</div>
+  <div class="subtext">현재 체중 기준으로 목표를 계산해요</div>
+  <input type="tel" inputmode="numeric" class="input-text" id="ob004-target" placeholder="목표 체중 (kg)" />
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob004-next" disabled>다음</button>
+</div>
+
+<div class="screen" data-id="OB-005">
+  <div class="spacer"></div>
+  <div style="text-align:center;">
+    <div class="badge-icon badge-lav" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">⏳</div>
+    <div class="headline" id="ob005-text">나에게 필요한 단백질을<br/>계산 중이에요</div>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<div class="screen" data-id="OB-006">
+  <div class="spacer"></div>
+  <div style="text-align:center;">
+    <div class="subtext" style="margin-bottom:4px;">OOO님을 위한 하루 목표예요</div>
+    <div id="ob006-protein" style="font-size:48px; font-weight:800; color:var(--primary);">0g</div>
+    <div class="subtext">단백질</div>
+    <div style="display:flex; gap:8px; margin-top:20px;">
+      <div class="card" style="flex:1; flex-direction:column; align-items:flex-start;">
+        <div class="card-sub">총열량</div>
+        <div class="card-label" id="ob006-kcal">0 kcal</div>
+      </div>
+      <div class="card" style="flex:1; flex-direction:column; align-items:flex-start;">
+        <div class="card-sub">탄수화물</div>
+        <div class="card-label" id="ob006-carb">0g</div>
+      </div>
+      <div class="card" style="flex:1; flex-direction:column; align-items:flex-start;">
+        <div class="card-sub">지방</div>
+        <div class="card-label" id="ob006-fat">0g</div>
+      </div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn-primary" id="ob006-start" href="#" style="display:block; box-sizing:border-box; text-align:center; text-decoration:none;">관리 시작하기</a>
+</div>
+    <!-- SCREENS -->
+  </div>
+</div>
+<script>
+const S = { onboarding: {}, goals: {} };
+const historyStack = [];
+const onEnter = {};
+
+function goTo(id, opts) {
+  opts = opts || {};
+  document.querySelectorAll('.screen').forEach(function(el){ el.classList.remove('active'); });
+  const el = document.querySelector('.screen[data-id="' + id + '"]');
+  if (!el) return;
+  el.classList.add('active');
+  if (!opts.replace) historyStack.push(id);
+  if (typeof onEnter[id] === 'function') onEnter[id]();
+}
+
+function goBack() {
+  if (historyStack.length > 1) {
+    historyStack.pop();
+    goTo(historyStack[historyStack.length - 1], { replace: true });
+  }
+}
+
+onEnter['SC-001'] = function () {
+  const input = document.getElementById('sub-input');
+  const submit = document.getElementById('sub-submit');
+  input.value = '';
+  submit.disabled = true;
+  input.oninput = function () {
+    const digitsOnly = input.value.replace(/[^0-9]/g, '');
+    input.value = digitsOnly;
+    submit.disabled = digitsOnly.length < 1;
+  };
+  submit.onclick = function () {
+    const v = input.value;
+    if (v === '00000') goTo('SC-003');
+    else if (v === '99999') goTo('SC-004');
+    else goTo('SC-002');
+  };
+  document.getElementById('sub-find').onclick = function () {
+    alert('실제 서비스에서는 인앱 브라우저로 네이버 마이쇼핑 > 정기구독 페이지가 열립니다.');
+  };
+};
+
+document.getElementById('sc002-start').onclick = function () { goTo('OB-001'); };
+
+document.getElementById('sc003-retry').onclick = function () { goTo('SC-001'); };
+document.getElementById('sc003-find').onclick = function () {
+  alert('실제 서비스에서는 인앱 브라우저로 네이버 신청정보 페이지가 열립니다.');
+};
+document.getElementById('sc003-buy').onclick = function () {
+  alert('실제 서비스에서는 네이버 스토어 델쥬아 구독 상품 페이지로 이동합니다.');
+};
+
+document.getElementById('sc004-retry').onclick = function () { goTo('SC-001'); };
+document.getElementById('sc004-find').onclick = function () {
+  alert('실제 서비스에서는 인앱 브라우저로 네이버 신청정보 페이지가 열립니다.');
+};
+document.getElementById('sc004-buy').onclick = function () {
+  alert('실제 서비스에서는 네이버 스토어 델쥬아 구독 상품 페이지로 이동합니다.');
+};
+
+onEnter['OB-001'] = function () {
+  let step = 1;
+  const slide1 = document.getElementById('ob001-slide-1');
+  const slide2 = document.getElementById('ob001-slide-2');
+  const next = document.getElementById('ob001-next');
+  slide1.style.display = '';
+  slide2.style.display = 'none';
+  next.textContent = '다음';
+  next.onclick = function () {
+    if (step === 1) {
+      step = 2;
+      slide1.style.display = 'none';
+      slide2.style.display = '';
+      next.textContent = '다음';
+    } else {
+      goTo('OB-002-1');
+    }
+  };
+  document.getElementById('ob001-skip').onclick = function () { goTo('OB-002-1'); };
+};
+
+document.getElementById('ob0021-allow').onclick = function () { goTo('OB-002-2'); };
+document.getElementById('ob0021-later').onclick = function () { goTo('OB-002-2'); };
+
+onEnter['OB-002-2'] = function () {
+  const maleBtn = document.getElementById('ob0022-male');
+  const femaleBtn = document.getElementById('ob0022-female');
+  const ageInput = document.getElementById('ob0022-age');
+  const heightInput = document.getElementById('ob0022-height');
+  const weightInput = document.getElementById('ob0022-weight');
+  const next = document.getElementById('ob0022-next');
+  const cards = document.querySelectorAll('#ob0022-activity-list .card');
+  let selectedGender = null;
+  let selectedActivity = null;
+
+  function refreshNextState() {
+    const ready = selectedGender && selectedActivity !== null &&
+      ageInput.value.length > 0 && heightInput.value.length > 0 && weightInput.value.length > 0;
+    next.disabled = !ready;
+  }
+
+  function selectGender(g) {
+    selectedGender = g;
+    maleBtn.style.background = g === 'male' ? 'var(--primary)' : 'transparent';
+    maleBtn.style.color = g === 'male' ? '#fff' : 'var(--primary)';
+    femaleBtn.style.background = g === 'female' ? 'var(--primary)' : 'transparent';
+    femaleBtn.style.color = g === 'female' ? '#fff' : 'var(--primary)';
+    refreshNextState();
+  }
+  maleBtn.onclick = function () { selectGender('male'); };
+  femaleBtn.onclick = function () { selectGender('female'); };
+
+  [ageInput, heightInput, weightInput].forEach(function (el) {
+    el.oninput = function () {
+      el.value = el.value.replace(/[^0-9]/g, '');
+      refreshNextState();
+    };
+  });
+
+  cards.forEach(function (card) {
+    card.onclick = function () {
+      cards.forEach(function (c) { c.style.outline = 'none'; });
+      card.style.outline = '2px solid var(--primary)';
+      selectedActivity = parseInt(card.getAttribute('data-idx'), 10);
+      refreshNextState();
+    };
+  });
+
+  next.onclick = function () {
+    S.onboarding.gender = selectedGender;
+    S.onboarding.age = parseInt(ageInput.value, 10);
+    S.onboarding.height = parseInt(heightInput.value, 10);
+    S.onboarding.weight = parseInt(weightInput.value, 10);
+    S.onboarding.activity = selectedActivity;
+    goTo('OB-003');
+  };
+};
+
+document.querySelectorAll('#screens .screen[data-id="OB-003"] .card').forEach(function (card) {
+  card.onclick = function () {
+    const goal = card.getAttribute('data-goal');
+    S.onboarding.goalType = goal;
+    if (goal === 'maintain') {
+      S.onboarding.targetWeight = S.onboarding.weight;
+      goTo('OB-005');
+    } else {
+      goTo('OB-004');
+    }
+  };
+});
+
+onEnter['OB-004'] = function () {
+  const input = document.getElementById('ob004-target');
+  const next = document.getElementById('ob004-next');
+  input.value = '';
+  next.disabled = true;
+  input.oninput = function () {
+    input.value = input.value.replace(/[^0-9]/g, '');
+    next.disabled = input.value.length < 1;
+  };
+  next.onclick = function () {
+    S.onboarding.targetWeight = parseInt(input.value, 10);
+    goTo('OB-005');
+  };
+};
+
+const ACTIVITY_FACTORS = [1.2, 1.375, 1.55, 1.725, 1.9];
+const PROTEIN_PER_KG = { maintain: 1.2, lose: 1.6, gain: 2.0 };
+
+function calcBMR(o) {
+  if (o.gender === 'male') {
+    return 88.362 + 13.397 * o.weight + 4.799 * o.height - 5.677 * o.age;
+  }
+  return 447.593 + 9.247 * o.weight + 3.098 * o.height - 4.330 * o.age;
+}
+
+function calcGoals(o) {
+  const bmr = calcBMR(o);
+  const tdee = bmr * ACTIVITY_FACTORS[o.activity];
+  let kcal;
+  if (o.goalType === 'maintain') {
+    kcal = tdee;
+  } else if (o.goalType === 'lose') {
+    const diff = Math.abs(o.weight - o.targetWeight);
+    kcal = tdee * (diff <= 4.5 ? 0.85 : 0.75);
+  } else {
+    kcal = tdee * 1.15;
+  }
+  const proteinG = Math.round(o.weight * PROTEIN_PER_KG[o.goalType]);
+  const proteinKcal = proteinG * 4;
+  const fatKcal = kcal * 0.25;
+  const fatG = Math.round(fatKcal / 9);
+  const carbKcal = Math.max(kcal - proteinKcal - fatKcal, 0);
+  const carbG = Math.round(carbKcal / 4);
+  return { protein: proteinG, kcal: Math.round(kcal), carb: carbG, fat: fatG };
+}
+
+onEnter['OB-005'] = function () {
+  const textEl = document.getElementById('ob005-text');
+  const steps = [
+    '나에게 필요한 단백질을<br/>계산 중이에요',
+    '기타 필요한 영양소를<br/>계산 중이에요',
+    '거의 다 완료했어요!'
+  ];
+  let i = 0;
+  textEl.innerHTML = steps[0];
+  const timer = setInterval(function () {
+    i++;
+    if (i < steps.length) {
+      textEl.innerHTML = steps[i];
+    } else {
+      clearInterval(timer);
+      S.goals = calcGoals(S.onboarding);
+      goTo('OB-006');
+    }
+  }, 700);
+};
+
+onEnter['OB-006'] = function () {
+  document.getElementById('ob006-protein').textContent = S.goals.protein + 'g';
+  document.getElementById('ob006-kcal').textContent = S.goals.kcal + ' kcal';
+  document.getElementById('ob006-carb').textContent = S.goals.carb + 'g';
+  document.getElementById('ob006-fat').textContent = S.goals.fat + 'g';
+
+  const params = new URLSearchParams({
+    protein: S.goals.protein,
+    kcal: S.goals.kcal,
+    carb: S.goals.carb,
+    fat: S.goals.fat,
+    goalType: S.onboarding.goalType
+  });
+  document.getElementById('ob006-start').href =
+    './홈_이후_와이어프레임.html?' + params.toString();
+};
+
+/* HANDLERS */
+
+goTo('SC-001');
+</script>
+</body>
+</html>
