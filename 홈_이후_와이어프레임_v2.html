@@ -1159,6 +1159,8 @@ function getAllTimeProteinTotal() {
 
 const ACHV_CONFETTI_COLORS = ['#FF8A3D', '#FFC495', '#2FAE7C', '#3B9FE0', '#FFD166', '#FF6B6B'];
 const achvGoalState = {}; // dateKey별로 100% 달성 여부를 기억해서, 이미 본 달성 화면이 매번 다시 뜨지 않도록 함
+let justRecordedMeal = false; // R-500에서 방금 기록을 저장하고 넘어온 경우에만 보상카드 체크 대상
+let pendingRewardCheck = false; // 100% 달성 화면과 겹치면, 그 화면을 닫을 때 보상카드를 체크하도록 미룸
 
 function spawnFullScreenConfetti() {
   const layer = document.getElementById('achv-confetti-layer');
@@ -1190,6 +1192,10 @@ function showAchievementScreen(goal) {
 
 function hideAchievementScreen() {
   document.getElementById('achievement-screen').classList.remove('visible');
+  if (pendingRewardCheck) {
+    pendingRewardCheck = false;
+    maybeAwardFirstRecordCard();
+  }
 }
 
 document.getElementById('achv-close').onclick = hideAchievementScreen;
@@ -1254,8 +1260,17 @@ function renderHome() {
   if (!achvGoalState[S.selectedDateKey]) achvGoalState[S.selectedDateKey] = { reached: false };
   const dayState = achvGoalState[S.selectedDateKey];
   const goalReachedNow = pct >= 100;
-  if (goalReachedNow && !dayState.reached) showAchievementScreen(goal);
+  const justReachedGoal = goalReachedNow && !dayState.reached;
   dayState.reached = goalReachedNow;
+
+  if (justReachedGoal) {
+    // 100% 달성 화면과 겹치지 않도록, 보상카드 체크는 이 화면을 닫을 때로 미룸
+    pendingRewardCheck = justRecordedMeal;
+    showAchievementScreen(goal);
+  } else if (justRecordedMeal) {
+    maybeAwardFirstRecordCard();
+  }
+  justRecordedMeal = false;
 }
 
 const prevHmEnter = onEnter['HM-001'];
@@ -1584,8 +1599,8 @@ onEnter['R-500'] = function () {
     });
     S.cart = [];
     renderCartFab();
+    justRecordedMeal = true;
     goTo('HM-001', { replace: true });
-    maybeAwardFirstRecordCard();
   };
 };
 
