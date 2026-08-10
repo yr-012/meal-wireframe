@@ -126,6 +126,15 @@ body {
   <button class="link" id="sub-cs">고객센터 연결하기</button>
 </div>
 
+<div class="screen" data-id="SC-006">
+  <button class="link" id="sc006-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
+  <div class="headline">구독번호는 어디서<br/>확인하나요?</div>
+  <div class="subtext">델쥬아 구독은 네이버 마이쇼핑을 통해 진행돼요. 주문내역에서 구독번호를 확인할 수 있어요.</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc006-goto">네이버 마이쇼핑으로 이동</button>
+  <button class="link" id="sc006-cs">그래도 못 찾겠어요</button>
+</div>
+
 <div class="screen" data-id="SC-002">
   <div class="spacer"></div>
   <div class="badge-icon badge-accent" style="width:72px;height:72px;font-size:32px;margin:0 auto 20px;">🎉</div>
@@ -309,13 +318,17 @@ onEnter['SC-001'] = function () {
     else if (v === '11111') goTo('SC-005');
     else goTo('SC-002');
   };
-  document.getElementById('sub-find').onclick = function () {
-    alert('실제 서비스에서는 인앱 브라우저로 네이버 마이쇼핑 > 정기구독 페이지가 열립니다.');
-  };
+  document.getElementById('sub-find').onclick = function () { goTo('SC-006'); };
   document.getElementById('sub-cs').onclick = openCustomerServiceStub;
 };
 
 document.getElementById('sc002-start').onclick = function () { goTo('OB-001'); };
+
+document.getElementById('sc006-back').onclick = function () { goTo('SC-001'); };
+document.getElementById('sc006-goto').onclick = function () {
+  alert('실제 서비스에서는 인앱 브라우저로 네이버 마이쇼핑 > 정기구독 페이지가 열립니다.');
+};
+document.getElementById('sc006-cs').onclick = openCustomerServiceStub;
 
 document.getElementById('sc003-retry').onclick = function () { goTo('SC-001'); };
 document.getElementById('sc003-find').onclick = function () {
