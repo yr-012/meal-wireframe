@@ -476,17 +476,42 @@ body {
 
     <div class="screen" data-id="HG-001">
       <button class="link" id="hg001-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
+      <div class="headline" style="margin:0 0 4px;">건강 등급</div>
+      <div class="subtext" style="margin:0 0 16px;">최근 7일간의 단백질 섭취 습관을 바탕으로 실시간으로 계산돼요</div>
 
-      <div style="text-align:center; margin:16px 0 4px;">
-        <div style="font-size:32px; margin-bottom:12px;">🏆</div>
-        <div class="headline" style="margin:0 0 6px;">준비 중이에요</div>
-        <div class="card-sub">단백질 자산 등급 기능을 곧 만나보실 수 있어요</div>
+      <!-- ① 현재 등급: 등급+점수를 하나의 시각적 단위로 묶고, 그 아래 등급 의미 한 줄을 덧붙임 -->
+      <div class="card" style="flex-direction:column; align-items:center; text-align:center; padding:24px 18px;">
+        <div id="hg-grade-badge" style="font-size:28px; font-weight:800; padding:10px 28px; border-radius:999px; margin-bottom:8px;">-</div>
+        <div id="hg-grade-score" style="font-size:22px; font-weight:800; color:var(--text);">-</div>
+        <div class="card-sub" style="margin-top:2px;">최근 7일 기준</div>
+        <div id="hg-grade-meaning" style="margin-top:14px; font-size:14px; color:var(--text); line-height:1.5;">-</div>
       </div>
 
-      <div style="margin-top:28px;">
-        <div class="skeleton-block" style="width:120px; height:32px; margin:0 auto 20px;"></div>
-        <div class="skeleton-block" style="width:100%; height:64px; margin-bottom:12px;"></div>
-        <div class="skeleton-block" style="width:100%; height:64px;"></div>
+      <!-- ② 지금 해야 할 행동: 화면의 핵심. 승급 기회 / 강등 주의 / 유지 3가지 상태 중 하나만 표시 -->
+      <div class="card" id="hg-action-card" style="flex-direction:column; align-items:stretch; padding:20px 18px; border:2px solid transparent;">
+        <div id="hg-action-label" style="align-self:flex-start; font-size:12px; font-weight:800; padding:5px 12px; border-radius:999px; margin-bottom:10px;">-</div>
+        <div id="hg-action-message" style="font-size:16px; font-weight:700; color:var(--text); line-height:1.5;">-</div>
+      </div>
+
+      <!-- ③ 오늘 상태: 진행 중 느낌을 주는 3가지 케이스(기록 없음/목표 미달/목표 달성) -->
+      <div class="card" style="flex-direction:column; align-items:stretch;">
+        <div class="card-sub" style="margin-bottom:8px;">오늘 상태</div>
+        <div id="hg-today-headline" style="font-size:16px; font-weight:800; color:var(--text);">-</div>
+        <div id="hg-today-body" style="font-size:14px; color:var(--text); margin-top:4px; line-height:1.5;">-</div>
+        <div id="hg-today-subtext" style="font-size:12px; color:var(--text-muted); margin-top:4px; display:none;"></div>
+      </div>
+
+      <!-- ④ 최근 7일 흐름: 요일 라벨 + 탭하면 하단에 상세 패널 + 오늘 바에 명시적 "진행 중" 캡션 -->
+      <div class="card" style="flex-direction:column; align-items:stretch;">
+        <div class="card-sub" style="margin-bottom:10px;">최근 7일 흐름</div>
+        <div id="hg-history-bars" style="display:flex; align-items:flex-end; gap:8px;"></div>
+        <div id="hg-history-detail-panel" style="flex-direction:column; align-items:flex-start; display:none; margin-top:14px; padding-top:14px; border-top:1px solid #ECECF3;"></div>
+      </div>
+
+      <!-- ⑤ 세부 기준: 참고 자료로 하단 배치, 톤 다운 -->
+      <div class="card" style="flex-direction:column; align-items:stretch; background:#FAFAFC; box-shadow:none; border:1px solid #ECECF3;">
+        <div class="card-sub" style="margin-bottom:8px;">세부 기준 (참고)</div>
+        <div id="hg-grade-reference" style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-muted);"></div>
       </div>
 
       <div class="spacer"></div>
@@ -676,6 +701,288 @@ function getGoalsForDate(dateKeyStr) {
   }
   return result;
 }
+
+// ===== 건강 등급 (HG-001) =====
+// "최근 7일 롤링" 실시간 지표: 매일 계산 기준일(오늘, new Date() 실제 시점)이 바뀌면서 창이 함께 밀려감.
+// 하루 점수(최대 100) = A(단백질 섭취량, 최대 70) + B(끼니별 섭취 균형, 최대 30).
+const HG_GRADE_ORDER = ['등급 측정 중', 'B', 'B+', 'A', 'A+', 'S', 'S+'];
+// 각 등급의 점수 하한선(등급 측정 중은 점수 개념이 없으므로 제외).
+const HG_GRADE_FLOORS = { 'B': 1, 'B+': 100, 'A': 200, 'A+': 350, 'S': 500, 'S+': 620 };
+// 등급 기준 안내용 점수 구간(참고 표시 전용).
+const HG_GRADE_RANGES = {
+  'B': [1, 99], 'B+': [100, 199], 'A': [200, 349], 'A+': [350, 499], 'S': [500, 619], 'S+': [620, 700]
+};
+// S/S+는 점수 구간만으로 부족하고, 최근 7일 중 목표 달성(그날 단백질 섭취율 100% 이상) 빈도 조건도 함께 충족해야 함.
+const HG_GRADE_FREQ_REQ = { 'S': 5, 'S+': 6 };
+// 등급 배지 색상: 낮은 등급일수록 무채색/차분한 톤, S+로 갈수록 이 파일에 이미 있는 가장 진한 오렌지 톤으로 escalate.
+// 새 hex를 만들지 않고 기존 --badge-* 토큰과, 반원 게이지에 이미 쓰인 그라디언트 색(#FFC495, #FF7A1F)만 재사용함.
+const HG_GRADE_STYLES = {
+  '등급 측정 중': { bg: 'var(--disabled-bg)', fg: 'var(--disabled-text)' },
+  'B': { bg: 'var(--badge-blue-bg)', fg: 'var(--badge-blue-fg)' },
+  'B+': { bg: 'var(--badge-lav-bg)', fg: 'var(--badge-lav-fg)' },
+  'A': { bg: 'var(--badge-mint-bg)', fg: 'var(--badge-mint-fg)' },
+  'A+': { bg: 'var(--badge-accent-bg)', fg: 'var(--badge-accent-fg)' },
+  'S': { bg: 'var(--primary)', fg: '#fff' },
+  'S+': { bg: 'linear-gradient(135deg, #FFC495, #FF7A1F)', fg: '#fff' }
+};
+
+// 특정 날짜(dateKeyStr) 하루치 단백질 섭취량(A, 최대 70점) 점수.
+// 그날 유효했던 목표(getGoalsForDate)로 나눠 %를 구함 — 과거 목표 변경 이력을 반영.
+function hgProteinPoints(pct, hasRecords) {
+  if (!hasRecords) return 0;
+  if (pct >= 100) return 70;
+  if (pct >= 80) return 60;
+  if (pct >= 60) return 50;
+  if (pct >= 40) return 35;
+  if (pct > 0) return 20;
+  return 0;
+}
+
+// 끼니별 섭취 균형(B, 최대 30점): 아침/점심/저녁(간식·야식 제외) 중 같은 끼니 태그 기록을 합산해서
+// 30g 이상인 끼니 개수를 셈. buildBalancedMealSummary와 동일하게 "합산값 그대로 비교, 반올림 없음" 규칙을 그대로 따름.
+function hgMealBalancePoints(meals) {
+  const mainMeals = ['아침', '점심', '저녁'];
+  let metCount = 0;
+  mainMeals.forEach(function (label) {
+    const sum = meals.filter(function (m) { return m.meal === label; })
+      .reduce(function (s, m) { return s + m.protein; }, 0);
+    if (sum >= 30) metCount++;
+  });
+  if (metCount === 3) return 30;
+  if (metCount === 2) return 20;
+  if (metCount === 1) return 5;
+  return 0;
+}
+
+// 하루(dateKeyStr) 단위 건강 점수 breakdown.
+function computeDailyHealthScore(dateKeyStr) {
+  const meals = S.mealsByDate[dateKeyStr] || [];
+  const hasRecords = meals.length > 0;
+  const goal = getGoalsForDate(dateKeyStr).protein;
+  const total = meals.reduce(function (s, m) { return s + m.protein; }, 0);
+  const pct = hasRecords && goal > 0 ? (total / goal) * 100 : 0;
+  const proteinPoints = hgProteinPoints(pct, hasRecords);
+  const mealPoints = hgMealBalancePoints(meals);
+  return {
+    dateKeyStr: dateKeyStr,
+    hasRecords: hasRecords,
+    total: total,
+    goal: goal,
+    pct: pct,
+    proteinPoints: proteinPoints,
+    mealPoints: mealPoints,
+    dailyScore: proteinPoints + mealPoints,
+    achieved: hasRecords && pct >= 100 // 목표 달성 빈도 집계용: 그날 단백질 섭취율 100% 이상
+  };
+}
+
+// 점수만으로 정해지는 raw 등급 구간(빈도 게이팅 적용 전).
+function hgScoreBand(score) {
+  if (score < 100) return 'B';
+  if (score < 200) return 'B+';
+  if (score < 350) return 'A';
+  if (score < 500) return 'A+';
+  if (score < 620) return 'S';
+  return 'S+';
+}
+
+// S/S+ 구간은 빈도 요건(HG_GRADE_FREQ_REQ)을 추가로 만족해야 함.
+// S+ 요건(6일)부터 먼저 확인하고, 부족하면 S 요건(5일)을 확인 — 두 요건 모두 실패하면 A+로 강등.
+// 예) 점수 650(S+ 구간)인데 달성일수 4일 -> S+ 요건(6일) 실패, S 요건(5일)도 실패 -> A+.
+function hgApplyFrequencyGate(rawBand, achievedCount) {
+  if (rawBand === 'S+') {
+    if (achievedCount >= HG_GRADE_FREQ_REQ['S+']) return 'S+';
+    if (achievedCount >= HG_GRADE_FREQ_REQ['S']) return 'S';
+    return 'A+';
+  }
+  if (rawBand === 'S') {
+    if (achievedCount >= HG_GRADE_FREQ_REQ['S']) return 'S';
+    return 'A+';
+  }
+  return rawBand;
+}
+
+// 최근 7일(오늘 포함, 실제 new Date() 기준) 롤링 건강 등급 전체 계산.
+function computeWeeklyHealthGrade(refDate) {
+  refDate = refDate || new Date();
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate() - i);
+    days.push(computeDailyHealthScore(dateKey(d)));
+  }
+  const hasAnyRecords = days.some(function (d) { return d.hasRecords; });
+  const weeklyScore = days.reduce(function (s, d) { return s + d.dailyScore; }, 0);
+  const achievedCount = days.filter(function (d) { return d.achieved; }).length;
+  let rawBand = null, grade;
+  if (!hasAnyRecords) {
+    grade = '등급 측정 중';
+  } else {
+    rawBand = hgScoreBand(weeklyScore);
+    grade = hgApplyFrequencyGate(rawBand, achievedCount);
+  }
+  return { days: days, weeklyScore: weeklyScore, achievedCount: achievedCount, hasAnyRecords: hasAnyRecords, rawBand: rawBand, grade: grade };
+}
+
+// ①번 카드용 "등급 의미" 한 줄 카피. 등급 산정 로직과는 무관한 순수 카피 데이터라
+// 채점 함수(computeDailyHealthScore/hgScoreBand/hgApplyFrequencyGate)와 분리해 둠.
+const HG_GRADE_MEANING = {
+  '등급 측정 중': '최근 7일간 기록이 없어요. 오늘부터 기록을 시작해보세요.',
+  'B': '단백질을 의식해서 챙겨 먹는 행동이 나타나고 있어요.',
+  'B+': '단백질을 챙겨 먹는 행동이 여러 날 반복되고 있어요.',
+  'A': '필요한 단백질 목표를 달성하는 날이 늘고 있어요.',
+  'A+': '최근 7일 중 목표를 달성한 날이 5일 정도예요.',
+  'S': '목표를 달성하면서 끼니별 균형까지 잘 관리하고 있어요.',
+  'S+': '목표량과 섭취 균형을 거의 빠짐없이 안정적으로 관리하고 있어요.'
+};
+function hgGradeMeaning(grade) {
+  return HG_GRADE_MEANING[grade] || '';
+}
+
+// 오늘 단백질 목표(pct 100%)를 달성했다고 가정했을 때의 가상 주간 등급.
+// 끼니 균형(mealPoints)은 오늘 실제 값을 그대로 유지한다는 전제(단백질만 개선된다고 가정) — 스펙 요구사항.
+// 오늘이 이미 달성 상태(achieved)였다면 achievedCount는 그대로 둠(이중 카운트 방지).
+function hgHypotheticalGradeIfTodayAchieved(result) {
+  const today = result.days[result.days.length - 1];
+  const hypotheticalDailyScore = 70 + today.mealPoints;
+  const hypotheticalWeeklyScore = result.weeklyScore - today.dailyScore + hypotheticalDailyScore;
+  const hypotheticalAchievedCount = result.achievedCount + (today.achieved ? 0 : 1);
+  const hypotheticalRawBand = hgScoreBand(hypotheticalWeeklyScore);
+  const hypotheticalGrade = hgApplyFrequencyGate(hypotheticalRawBand, hypotheticalAchievedCount);
+  return {
+    hypotheticalWeeklyScore: hypotheticalWeeklyScore,
+    hypotheticalAchievedCount: hypotheticalAchievedCount,
+    hypotheticalGrade: hypotheticalGrade
+  };
+}
+
+// 강등 주의(State C) 판정. 두 신호를 OR로 결합함(스펙에서 "judgement로 결합"하라고 명시한 부분):
+//  신호 1) 현재 등급 구간의 하한 대비 하위 15% 이내로 점수가 낮음.
+//         (빈도 게이팅으로 이미 강등된 상태 — rawBand !== grade — 라면 점수가 표시 등급의 구간 밖에
+//          있을 수 있어 구간 하한 비교가 의미 없으므로 이 신호는 생략함. 기존 hgDemotionRiskNote와 동일 전제.)
+//  신호 2) 창에서 곧 빠질 가장 오래된 날(days[0])을 제외하면 이미 한 단계 낮은 등급으로 떨어짐
+//         -> 오늘 특별히 나쁜 기록이 없어도 내일 롤링 윈도우가 밀리면서 등급이 내려갈 수 있다는 뜻.
+//         (근사치: 그 날이 유일한 기록일이었다면 hasAnyRecords가 false로 바뀌어야 하지만, 여기서는
+//          단순화를 위해 그 경우도 hgScoreBand 결과를 그대로 사용함 — 참고용 신호이므로 허용 가능한 근사.)
+function hgIsDemotionRisk(result) {
+  if (!result.hasAnyRecords || result.grade === '등급 측정 중') return false;
+
+  let nearFloorSignal = false;
+  if (result.rawBand === result.grade) {
+    const range = HG_GRADE_RANGES[result.grade];
+    if (range) {
+      const floor = range[0], ceil = range[1];
+      nearFloorSignal = (result.weeklyScore - floor) <= 0.15 * (ceil - floor);
+    }
+  }
+
+  const oldest = result.days[0];
+  const scoreWithoutOldest = result.weeklyScore - oldest.dailyScore;
+  const achievedWithoutOldest = result.achievedCount - (oldest.achieved ? 1 : 0);
+  const gradeWithoutOldest = hgApplyFrequencyGate(hgScoreBand(scoreWithoutOldest), achievedWithoutOldest);
+  const rollOffSignal = HG_GRADE_ORDER.indexOf(gradeWithoutOldest) < HG_GRADE_ORDER.indexOf(result.grade);
+
+  return nearFloorSignal || rollOffSignal;
+}
+
+// ②번 "지금 해야 할 행동" 카드 상태 결정. 승급 기회(A) > 강등 주의(C) > 유지(B) 순으로 확인하고
+// 셋 중 하나만 반환함(동시 표시 없음).
+function hgComputeActionState(result) {
+  const gradeIdx = HG_GRADE_ORDER.indexOf(result.grade);
+  const today = result.days[result.days.length - 1];
+
+  // --- State A: 승급 기회 (S+는 다음 등급이 없어 절대 해당 안 됨) ---
+  if (today.pct < 100 && gradeIdx >= 0 && gradeIdx < HG_GRADE_ORDER.length - 1) {
+    const hypo = hgHypotheticalGradeIfTodayAchieved(result);
+    const hypoIdx = HG_GRADE_ORDER.indexOf(hypo.hypotheticalGrade);
+    if (hypoIdx > gradeIdx) {
+      const nextGrade = hypo.hypotheticalGrade;
+      // 점수 vs 빈도 중 실제로 막고 있는 조건 판별:
+      // "점수는 그대로 두고 달성일수만 +1" 했을 때 이미 다음 등급에 도달한다면 -> 빈도가 원인(점수는 이미 충분).
+      const gradeWithFreqBumpOnly = hgApplyFrequencyGate(hgScoreBand(result.weeklyScore), result.achievedCount + 1);
+      const freqBlocked = HG_GRADE_ORDER.indexOf(gradeWithFreqBumpOnly) >= hypoIdx;
+      const message = freqBlocked
+        ? '오늘 목표를 달성하면 목표 달성 ' + (result.achievedCount + 1) + '일째로, ' + nextGrade + ' 조건을 채울 수 있어요.'
+        : '오늘 단백질 목표를 달성하면 ' + nextGrade + '로 올라갈 수 있어요.';
+      return { state: 'promotion', label: nextGrade + ' 승급 기회', message: message };
+    }
+  }
+
+  // --- State C: 강등 주의 ---
+  if (hgIsDemotionRisk(result)) {
+    return {
+      state: 'demotion',
+      label: '강등 주의',
+      message: '최근 7일 점수가 낮아지고 있어요. 오늘 단백질을 챙기면 ' + result.grade + '등급을 지킬 수 있어요.'
+    };
+  }
+
+  // --- State B: 유지(기본값) ---
+  if (result.grade === 'S+') {
+    return { state: 'maintenance', label: 'S+ 유지 중', message: '최고 등급을 유지하고 있어요! 오늘도 이대로 이어가 보세요.' };
+  }
+  if (result.grade === '등급 측정 중') {
+    return { state: 'maintenance', label: '등급 측정 중', message: '오늘부터 단백질 섭취를 기록하면 등급이 계산되기 시작해요.' };
+  }
+  return {
+    state: 'maintenance',
+    label: result.grade + ' 유지 중',
+    message: '오늘도 단백질을 충분히 챙기면 ' + result.grade + '등급을 안정적으로 유지할 수 있어요.'
+  };
+}
+
+// ③번 "오늘 상태" 카드용 문구 계산. DOM에 접근하지 않는 순수 함수(테스트 용이성을 위해 분리).
+function hgBuildTodayStatus(today) {
+  if (!today.hasRecords) {
+    return {
+      headline: '오늘의 건강 점수',
+      body: '아직 계산 중이에요',
+      subtext: '오늘 단백질 섭취를 기록하면 점수가 반영돼요.'
+    };
+  }
+  if (today.pct < 100) {
+    const remainingGrams = Math.round(Math.max(today.goal - today.total, 0) * 10) / 10;
+    return {
+      headline: '오늘 ' + today.dailyScore + '점',
+      body: '단백질 목표까지 ' + remainingGrams + 'g 남았어요.',
+      subtext: null
+    };
+  }
+  if (today.mealPoints < 30) {
+    return {
+      headline: '오늘 ' + today.dailyScore + '점',
+      body: '단백질 목표 달성! 끼니별 균형을 챙기면 최대 ' + (30 - today.mealPoints) + '점을 더 받을 수 있어요.',
+      subtext: null
+    };
+  }
+  return {
+    headline: '오늘 ' + today.dailyScore + '점',
+    body: '오늘 100점! 단백질과 끼니 균형을 모두 챙겼어요.',
+    subtext: null
+  };
+}
+
+// ④번 히스토리 바의 요일 라벨. HG_WEEKDAY_LABELS(이 파일의 기존 요일 라벨 컨벤션)를 그대로 재사용.
+function hgWeekdayLabelForDateKey(dateKeyStr) {
+  const d = new Date(dateKeyStr.replace(/-/g, '/'));
+  return HG_WEEKDAY_LABELS[d.getDay()];
+}
+
+// 히스토리 바 탭 시 보여줄 상세 텍스트. DOM에 접근하지 않는 순수 함수.
+function hgHistoryDetailText(day) {
+  const weekday = hgWeekdayLabelForDateKey(day.dateKeyStr);
+  return {
+    title: weekday + '요일 ' + day.dailyScore + '점',
+    proteinLine: '단백질 섭취 ' + day.proteinPoints + '점',
+    mealLine: '끼니 균형 ' + day.mealPoints + '점'
+  };
+}
+
+// ②번 카드 상태별 색상. 새 hex 없이 기존 badge 토큰만 재사용(승급=accent/primary, 유지=mint, 강등=pink/danger).
+const HG_ACTION_STYLES = {
+  promotion: { cardBg: 'var(--badge-accent-bg)', cardBorder: 'var(--primary)', labelBg: '#fff', labelFg: 'var(--primary)' },
+  maintenance: { cardBg: 'var(--badge-mint-bg)', cardBorder: 'var(--badge-mint-fg)', labelBg: '#fff', labelFg: 'var(--badge-mint-fg)' },
+  demotion: { cardBg: 'var(--badge-pink-bg)', cardBorder: 'var(--danger)', labelBg: '#fff', labelFg: 'var(--danger)' }
+};
 
 const historyStack = [];
 const onEnter = {};
@@ -1189,8 +1496,106 @@ const MEAL_LABELS = ['아침', '점심', '저녁', '간식', '야식'];
 const GOAL_TYPE_LABEL = { maintain: '현상 유지', lose: '체중 감량', gain: '근력 증가' };
 const DELZUA_PROTEIN_PER_PACK = 33.6;
 
+const HG_WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+// ④번 히스토리 바 탭 시 하단 상세 패널을 채움. REPORT-001의 renderMealDetailPanel과 같은
+// "탭하면 하단에 상세가 펼쳐지는" 패턴을 그대로 재사용.
+function renderHgHistoryDetailPanel(days, idx) {
+  const day = days[idx];
+  const isToday = idx === days.length - 1;
+  const detail = hgHistoryDetailText(day);
+  const panel = document.getElementById('hg-history-detail-panel');
+  panel.innerHTML =
+    '<div class="card-label" style="margin-bottom:6px;">' + detail.title + (isToday ? ' · 오늘' : '') + '</div>' +
+    '<div class="card-sub">' + detail.proteinLine + '</div>' +
+    '<div class="card-sub">' + detail.mealLine + '</div>';
+  panel.style.display = 'flex';
+}
+
+function renderHealthGradeScreen() {
+  const result = computeWeeklyHealthGrade(new Date());
+  const style = HG_GRADE_STYLES[result.grade];
+  const today = result.days[result.days.length - 1];
+
+  // ① 현재 등급
+  const badge = document.getElementById('hg-grade-badge');
+  badge.textContent = result.grade;
+  badge.style.background = style.bg;
+  badge.style.color = style.fg;
+
+  const scoreEl = document.getElementById('hg-grade-score');
+  scoreEl.style.display = result.hasAnyRecords ? '' : 'none';
+  scoreEl.textContent = result.hasAnyRecords ? Math.round(result.weeklyScore) + '점' : '';
+
+  document.getElementById('hg-grade-meaning').textContent = hgGradeMeaning(result.grade);
+
+  // ② 지금 해야 할 행동 (승급 기회 / 강등 주의 / 유지 중 하나)
+  const action = hgComputeActionState(result);
+  const actionStyle = HG_ACTION_STYLES[action.state];
+  const actionCard = document.getElementById('hg-action-card');
+  actionCard.style.background = actionStyle.cardBg;
+  actionCard.style.borderColor = actionStyle.cardBorder;
+  const actionLabel = document.getElementById('hg-action-label');
+  actionLabel.textContent = action.label;
+  actionLabel.style.background = actionStyle.labelBg;
+  actionLabel.style.color = actionStyle.labelFg;
+  document.getElementById('hg-action-message').textContent = action.message;
+
+  // ③ 오늘 상태
+  const todayStatus = hgBuildTodayStatus(today);
+  document.getElementById('hg-today-headline').textContent = todayStatus.headline;
+  document.getElementById('hg-today-body').textContent = todayStatus.body;
+  const todaySubtextEl = document.getElementById('hg-today-subtext');
+  if (todayStatus.subtext) {
+    todaySubtextEl.textContent = todayStatus.subtext;
+    todaySubtextEl.style.display = '';
+  } else {
+    todaySubtextEl.style.display = 'none';
+  }
+
+  // ④ 최근 7일 흐름
+  const historyHtml = result.days.map(function (day, idx) {
+    const isToday = idx === result.days.length - 1;
+    const weekdayLabel = hgWeekdayLabelForDateKey(day.dateKeyStr);
+    const heightPct = Math.max(4, day.dailyScore); // dailyScore는 0~100이라 %로 그대로 사용, 완전 0이어도 살짝 보이게 최소치만 부여
+    const barColor = !day.hasRecords ? 'var(--disabled-bg)' : (day.achieved ? 'var(--badge-mint-fg)' : 'var(--primary)');
+    return '<div data-day-idx="' + idx + '" style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; cursor:pointer;">' +
+      '<div style="width:100%; max-width:28px; height:60px; border-radius:8px; background:#F0EEFB; display:flex; align-items:flex-end; overflow:hidden;' +
+        (isToday ? ' box-shadow:0 0 0 2px var(--primary) inset;' : '') + '">' +
+        '<div style="width:100%; height:' + heightPct + '%; background:' + barColor + '; border-radius:8px;"></div>' +
+      '</div>' +
+      '<div style="font-size:10px; color:' + (isToday ? 'var(--primary)' : 'var(--text-muted)') + '; font-weight:' + (isToday ? '800' : '400') + ';">' + weekdayLabel + '</div>' +
+      (isToday ? '<div style="font-size:9px; color:var(--primary); font-weight:800;">오늘 진행 중</div>' : '') +
+    '</div>';
+  }).join('');
+  document.getElementById('hg-history-bars').innerHTML = historyHtml;
+  document.getElementById('hg-history-detail-panel').style.display = 'none';
+  document.querySelectorAll('#hg-history-bars [data-day-idx]').forEach(function (el) {
+    el.onclick = function () {
+      renderHgHistoryDetailPanel(result.days, parseInt(el.getAttribute('data-day-idx'), 10));
+    };
+  });
+
+  // ⑤ 세부 기준 (참고용, 하단 배치)
+  const referenceRows = [
+    ['B', '1~99점'],
+    ['B+', '100~199점'],
+    ['A', '200~349점'],
+    ['A+', '350~499점'],
+    ['S', '500~619점 (+ 최근 7일 중 5일 이상 목표 달성)'],
+    ['S+', '620~700점 (+ 최근 7일 중 6일 이상 목표 달성)']
+  ];
+  document.getElementById('hg-grade-reference').innerHTML = referenceRows.map(function (row) {
+    return '<div style="display:flex; justify-content:space-between; gap:8px;">' +
+      '<span style="font-weight:700; color:var(--text); flex-shrink:0;">' + row[0] + '</span>' +
+      '<span style="text-align:right;">' + row[1] + '</span>' +
+    '</div>';
+  }).join('');
+}
+
 onEnter['HG-001'] = function () {
   document.getElementById('hg001-back').onclick = function () { goTo('HM-001'); };
+  renderHealthGradeScreen();
 };
 
 function getMealsForSelectedDate() {
@@ -1313,7 +1718,7 @@ function renderHome() {
   container.innerHTML =
     '<div id="hm-gauge-wrap" style="background:var(--surface); border-radius:var(--radius-card); box-shadow:var(--shadow); padding:14px 16px 16px; margin:0 auto 10px; width:fit-content; position:relative; transition:filter .3s;">' +
       '<span id="hm-sparkle" style="position:absolute; top:10px; right:18px; font-size:20px; opacity:0; transition:opacity .3s;">✨</span>' +
-      '<button id="hm-grade-trophy-btn" style="position:absolute; top:8px; left:12px; z-index:2; background:none; border:none; font-size:20px; line-height:1; padding:4px; cursor:pointer;" aria-label="단백질 자산 등급 보기">🏆</button>' +
+      '<button id="hm-grade-trophy-btn" style="position:absolute; top:8px; left:12px; z-index:2; background:none; border:none; font-size:20px; line-height:1; padding:4px; cursor:pointer;" aria-label="건강 등급 보기">🏆</button>' +
       '<svg id="hm-gauge-svg" width="300" height="135" viewBox="0 0 300 135" style="display:block; margin:0 auto;"></svg>' +
     '</div>' +
     '<div style="background:var(--surface); border-radius:var(--radius-pill); padding:12px 24px; display:flex; align-items:baseline; justify-content:center; gap:6px; width:fit-content; margin:0 auto 16px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">' +
