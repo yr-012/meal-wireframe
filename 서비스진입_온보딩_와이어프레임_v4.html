@@ -101,6 +101,20 @@ body {
 }
 .input-text:focus { outline:2px solid var(--primary); }
 .skip-link { position:absolute; top:20px; right:24px; font-size:14px; color:var(--text-muted); background:none; border:none; cursor:pointer; z-index:5; }
+.overlay-backdrop {
+  display:none; position:absolute; inset:0; background:rgba(20,20,40,0.4); z-index:30;
+}
+.overlay-backdrop.visible { display:block; }
+.bottom-sheet {
+  position:absolute; left:0; right:0; bottom:0;
+  background:#fff; border-radius:24px 24px 0 0;
+  box-shadow:0 -8px 24px rgba(0,0,0,0.15);
+  z-index:31; padding:12px 20px 24px;
+  max-height:70%; overflow-y:auto;
+  transform:translateY(100%); transition:transform 0.25s ease;
+}
+.bottom-sheet.visible { transform:translateY(0); }
+.sheet-handle { width:40px; height:4px; background:#E0E0EA; border-radius:2px; margin:0 auto 16px; }
 </style>
 </head>
 <body>
@@ -124,15 +138,6 @@ body {
   <button class="btn-primary" id="sub-submit" disabled>인증하기</button>
   <button class="link" id="sub-find">구독번호 확인하기</button>
   <button class="link" id="sub-cs">고객센터 연결하기</button>
-</div>
-
-<div class="screen" data-id="SC-006">
-  <button class="link" id="sc006-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
-  <div class="headline">구독번호는 어디서<br/>확인하나요?</div>
-  <div class="subtext">델쥬아 구독은 네이버 마이쇼핑을 통해 진행돼요. 주문내역에서 구독번호를 확인할 수 있어요.</div>
-  <div class="spacer"></div>
-  <button class="btn-primary" id="sc006-goto">네이버 마이쇼핑으로 이동</button>
-  <button class="link" id="sc006-cs">그래도 못 찾겠어요</button>
 </div>
 
 <div class="screen" data-id="SC-002">
@@ -274,6 +279,11 @@ body {
 </div>
     <!-- SCREENS -->
   </div>
+  <div class="overlay-backdrop" id="sheet-backdrop"></div>
+  <div class="bottom-sheet" id="info-sheet">
+    <div class="sheet-handle"></div>
+    <div id="info-sheet-body"></div>
+  </div>
 </div>
 <script>
 const S = { onboarding: {}, goals: {} };
@@ -318,17 +328,34 @@ onEnter['SC-001'] = function () {
     else if (v === '11111') goTo('SC-005');
     else goTo('SC-002');
   };
-  document.getElementById('sub-find').onclick = function () { goTo('SC-006'); };
+  document.getElementById('sub-find').onclick = openFindSubSheet;
   document.getElementById('sub-cs').onclick = openCustomerServiceStub;
 };
 
 document.getElementById('sc002-start').onclick = function () { goTo('OB-001'); };
 
-document.getElementById('sc006-back').onclick = function () { goTo('SC-001'); };
-document.getElementById('sc006-goto').onclick = function () {
-  alert('실제 서비스에서는 인앱 브라우저로 네이버 마이쇼핑 > 정기구독 페이지가 열립니다.');
-};
-document.getElementById('sc006-cs').onclick = openCustomerServiceStub;
+function closeInfoSheet() {
+  document.getElementById('info-sheet').classList.remove('visible');
+  document.getElementById('sheet-backdrop').classList.remove('visible');
+}
+document.getElementById('sheet-backdrop').onclick = closeInfoSheet;
+
+function openFindSubSheet() {
+  document.getElementById('info-sheet-body').innerHTML =
+    '<div style="display:flex; align-items:flex-start; justify-content:space-between;">' +
+      '<div class="headline" style="margin:0 0 4px;">구독번호는 어디서<br/>확인하나요?</div>' +
+      '<button id="find-sub-sheet-close" style="background:none; border:none; font-size:18px; color:var(--text-muted); cursor:pointer; padding:4px;">✕</button>' +
+    '</div>' +
+    '<div class="subtext" style="margin-bottom:16px;">델쥬아 구독은 네이버 마이쇼핑을 통해 진행돼요. 주문내역에서 구독번호를 확인할 수 있어요.</div>' +
+    '<button class="btn-primary" id="find-sub-sheet-goto" style="margin-top:0;">네이버 마이쇼핑으로 이동</button>';
+  document.getElementById('find-sub-sheet-close').onclick = closeInfoSheet;
+  document.getElementById('find-sub-sheet-goto').onclick = function () {
+    alert('실제 서비스에서는 인앱 브라우저로 네이버 마이쇼핑 > 정기구독 페이지가 열립니다.');
+    closeInfoSheet();
+  };
+  document.getElementById('info-sheet').classList.add('visible');
+  document.getElementById('sheet-backdrop').classList.add('visible');
+}
 
 document.getElementById('sc003-retry').onclick = function () { goTo('SC-001'); };
 document.getElementById('sc003-find').onclick = function () {
