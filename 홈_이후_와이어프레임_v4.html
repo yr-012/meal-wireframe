@@ -288,7 +288,6 @@ body {
       <button class="link" id="r001-close" style="text-align:left; margin:0 0 8px;">← 닫기</button>
       <div style="display:flex; gap:8px; margin-bottom:16px;">
         <button class="btn-secondary" id="r001-tab-search" style="margin:0; width:auto; flex:1;">검색</button>
-        <button class="btn-secondary" id="r001-tab-direct" style="margin:0; width:auto; flex:1;">직접입력</button>
         <button class="btn-secondary" id="r001-tab-fav" style="margin:0; width:auto; flex:1;">자주먹는</button>
       </div>
       <div id="r001-content"></div>
@@ -343,6 +342,7 @@ body {
           <div style="font-size:15px; color:var(--text-muted);">g</div>
           <div style="margin-left:auto; font-weight:700; font-size:13px; padding:6px 12px; border-radius:999px;" id="report-tier-badge">-</div>
         </div>
+        <div id="report-streak-info" style="display:none; font-size:12px; color:var(--text-muted); margin-top:6px;"></div>
         <div style="height:16px; border-radius:8px; overflow:hidden; background:#E7E5F5; margin-top:14px;">
           <div id="report-fill" style="height:100%; background:var(--primary); border-radius:8px;"></div>
         </div>
@@ -479,12 +479,12 @@ body {
       <div class="headline" style="margin:0 0 4px;">건강 등급</div>
       <div class="subtext" style="margin:0 0 16px;">최근 7일간의 단백질 섭취 습관을 바탕으로 실시간으로 계산돼요</div>
 
-      <!-- ① 현재 등급: 등급+점수를 하나의 시각적 단위로 묶고, 그 아래 등급 의미 한 줄을 덧붙임 -->
+      <!-- ① 현재 등급: 등급+점수+캡션을 하나의 조밀한 단위로 묶고(간격 절반으로 축소), 그 아래 등급 의미 한 줄은 간격을 더 벌려 분리 -->
       <div class="card" style="flex-direction:column; align-items:center; text-align:center; padding:24px 18px;">
-        <div id="hg-grade-badge" style="font-size:28px; font-weight:800; padding:10px 28px; border-radius:999px; margin-bottom:8px;">-</div>
+        <div id="hg-grade-badge" style="font-size:28px; font-weight:800; padding:10px 28px; border-radius:999px; margin-bottom:4px;">-</div>
         <div id="hg-grade-score" style="font-size:22px; font-weight:800; color:var(--text);">-</div>
-        <div class="card-sub" style="margin-top:2px;">최근 7일 기준</div>
-        <div id="hg-grade-meaning" style="margin-top:14px; font-size:14px; color:var(--text); line-height:1.5;">-</div>
+        <div class="card-sub" style="margin-top:1px;">최근 7일 기준</div>
+        <div id="hg-grade-meaning" style="margin-top:18px; font-size:14px; color:var(--text); line-height:1.5;">-</div>
       </div>
 
       <!-- ② 지금 해야 할 행동: 화면의 핵심. 승급 기회 / 강등 주의 / 유지 3가지 상태 중 하나만 표시 -->
@@ -501,10 +501,12 @@ body {
         <div id="hg-today-subtext" style="font-size:12px; color:var(--text-muted); margin-top:4px; display:none;"></div>
       </div>
 
-      <!-- ④ 최근 7일 흐름: 요일 라벨 + 탭하면 하단에 상세 패널 + 오늘 바에 명시적 "진행 중" 캡션 -->
+      <!-- ④ 최근 7일 흐름: 요일 라벨 + 탭하면 하단에 상세 패널. "오늘 진행 중" 캡션은 바 안에 넣지 않고 차트 아래 별도 줄로 분리해 줄바꿈 방지 -->
       <div class="card" style="flex-direction:column; align-items:stretch;">
         <div class="card-sub" style="margin-bottom:10px;">최근 7일 흐름</div>
         <div id="hg-history-bars" style="display:flex; align-items:flex-end; gap:8px;"></div>
+        <div id="hg-history-today-caption" style="text-align:right; font-size:11px; font-weight:800; color:var(--primary); margin-top:6px;"></div>
+        <div class="subtext" style="text-align:center; margin:8px 0 0;">막대를 탭하면 자세히 볼 수 있어요</div>
         <div id="hg-history-detail-panel" style="flex-direction:column; align-items:flex-start; display:none; margin-top:14px; padding-top:14px; border-top:1px solid #ECECF3;"></div>
       </div>
 
@@ -1557,18 +1559,19 @@ function renderHealthGradeScreen() {
   const historyHtml = result.days.map(function (day, idx) {
     const isToday = idx === result.days.length - 1;
     const weekdayLabel = hgWeekdayLabelForDateKey(day.dateKeyStr);
-    const heightPct = Math.max(4, day.dailyScore); // dailyScore는 0~100이라 %로 그대로 사용, 완전 0이어도 살짝 보이게 최소치만 부여
-    const barColor = !day.hasRecords ? 'var(--disabled-bg)' : (day.achieved ? 'var(--badge-mint-fg)' : 'var(--primary)');
+    const heightPct = day.dailyScore; // dailyScore는 0~100이라 %로 그대로 사용. 0점(기록 없음 포함)이어도 최소치를 주지 않고 실제 비율 그대로 렌더링
+    // 달성 여부(그날 단백질 섭취율 100%+)만으로 갈리는 2색 체계. 점수 구간별로 색을 나누지 않고 achieved=true -> 민트, false -> 오렌지로 이진 처리
+    const barColor = day.achieved ? 'var(--badge-mint-fg)' : 'var(--primary)';
     return '<div data-day-idx="' + idx + '" style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; cursor:pointer;">' +
-      '<div style="width:100%; max-width:28px; height:60px; border-radius:8px; background:#F0EEFB; display:flex; align-items:flex-end; overflow:hidden;' +
-        (isToday ? ' box-shadow:0 0 0 2px var(--primary) inset;' : '') + '">' +
+      '<div style="width:100%; max-width:28px; height:60px; border-radius:8px; background:#F0EEFB; display:flex; align-items:flex-end; overflow:hidden; box-shadow:var(--shadow)' +
+        (isToday ? ', 0 0 0 2px var(--primary) inset' : '') + ';">' +
         '<div style="width:100%; height:' + heightPct + '%; background:' + barColor + '; border-radius:8px;"></div>' +
       '</div>' +
       '<div style="font-size:10px; color:' + (isToday ? 'var(--primary)' : 'var(--text-muted)') + '; font-weight:' + (isToday ? '800' : '400') + ';">' + weekdayLabel + '</div>' +
-      (isToday ? '<div style="font-size:9px; color:var(--primary); font-weight:800;">오늘 진행 중</div>' : '') +
     '</div>';
   }).join('');
   document.getElementById('hg-history-bars').innerHTML = historyHtml;
+  document.getElementById('hg-history-today-caption').textContent = '오늘 진행 중';
   document.getElementById('hg-history-detail-panel').style.display = 'none';
   document.querySelectorAll('#hg-history-bars [data-day-idx]').forEach(function (el) {
     el.onclick = function () {
@@ -1800,8 +1803,6 @@ const RECORD_TABS = { search: 'R-100', direct: 'R-200', fav: 'R-300' };
 function switchRecordTab(name) {
   document.getElementById('r001-tab-search').style.background = name === 'search' ? 'var(--primary)' : 'transparent';
   document.getElementById('r001-tab-search').style.color = name === 'search' ? '#fff' : 'var(--primary)';
-  document.getElementById('r001-tab-direct').style.background = name === 'direct' ? 'var(--primary)' : 'transparent';
-  document.getElementById('r001-tab-direct').style.color = name === 'direct' ? '#fff' : 'var(--primary)';
   document.getElementById('r001-tab-fav').style.background = name === 'fav' ? 'var(--primary)' : 'transparent';
   document.getElementById('r001-tab-fav').style.color = name === 'fav' ? '#fff' : 'var(--primary)';
   const content = document.getElementById('r001-content');
@@ -1814,7 +1815,6 @@ const onRecordTab = {};
 onEnter['R-001'] = function () {
   switchRecordTab('search');
   document.getElementById('r001-tab-search').onclick = function () { switchRecordTab('search'); };
-  document.getElementById('r001-tab-direct').onclick = function () { switchRecordTab('direct'); };
   document.getElementById('r001-tab-fav').onclick = function () { switchRecordTab('fav'); };
   document.getElementById('r001-close').onclick = function () { goTo('HM-001'); };
 };
@@ -1840,40 +1840,86 @@ const FOOD_DB = [
   { name: '델쥬아 닭가슴살면 1봉', protein: 33.6 }
 ];
 
+function getRecentFoods(limit) {
+  const dates = Object.keys(S.mealsByDate).sort().reverse();
+  const seen = {};
+  const result = [];
+  for (let d = 0; d < dates.length; d++) {
+    const meals = S.mealsByDate[dates[d]];
+    for (let m = 0; m < meals.length; m++) {
+      const meal = meals[m];
+      if (!seen[meal.name]) {
+        seen[meal.name] = true;
+        result.push({ name: meal.name, protein: meal.protein });
+        if (result.length >= limit) return result;
+      }
+    }
+  }
+  return result;
+}
+
+let directPrefillName = '';
+
+function goToDirectEntry(name) {
+  directPrefillName = name;
+  switchRecordTab('direct');
+}
+
+function foodCardHtml(items) {
+  return items.map(function (f, i) {
+    return '<div class="card" data-idx="' + i + '"><div class="badge-icon badge-blue">🍽</div>' +
+      '<div class="card-label">' + f.name + '</div><div class="card-sub">단백질 ' + f.protein + 'g</div></div>';
+  }).join('');
+}
+
 onRecordTab.search = function () {
   const root = document.getElementById('record-subscreen-search');
   root.innerHTML =
     '<input type="text" class="input-text" id="r100-input" placeholder="식품명을 검색하세요" />' +
-    '<button class="btn-secondary" id="r100-search-btn" style="margin-top:0; margin-bottom:16px;">검색</button>' +
     '<div id="r100-results"></div>';
   const input = document.getElementById('r100-input');
   const results = document.getElementById('r100-results');
   function renderResults() {
     const q = input.value.trim();
-    const matched = q === ''
-      ? FOOD_DB.filter(function (f) { return f.name.indexOf('델쥬아') !== -1; })
-      : FOOD_DB.filter(function (f) { return f.name.indexOf(q) !== -1; });
-    results.innerHTML = matched.map(function (f, i) {
-      return '<div class="card" data-idx="' + i + '"><div class="badge-icon badge-blue">🍽</div>' +
-        '<div class="card-label">' + f.name + '</div><div class="card-sub">단백질 ' + f.protein + 'g</div></div>';
-    }).join('');
+    if (q === '') {
+      const recent = getRecentFoods(5);
+      results.innerHTML = '<div class="subtext" style="margin:0 0 8px;">최근 기록</div>' +
+        (recent.length === 0
+          ? '<div class="card-sub" style="padding:12px 0;">아직 기록한 음식이 없어요</div>'
+          : foodCardHtml(recent));
+      results.querySelectorAll('.card').forEach(function (card, i) {
+        card.onclick = function () { openFoodEdit(recent[i], 'search'); };
+      });
+      return;
+    }
+    const matched = FOOD_DB.filter(function (f) { return f.name.indexOf(q) !== -1; });
+    const directPromptHtml = matched.length === 0
+      ? '<div class="card-sub" style="padding:12px 0;">검색 결과가 없어요</div>' +
+        '<button class="btn-primary" id="r100-direct-btn">직접 등록하기</button>'
+      : '<div style="border-top:1px solid #ECECF3; margin-top:12px; padding-top:12px;">' +
+        '<button class="btn-secondary" id="r100-direct-btn" style="margin:0;">찾는 음식이 없나요? · 직접 등록하기</button></div>';
+    results.innerHTML = foodCardHtml(matched) + directPromptHtml;
     results.querySelectorAll('.card').forEach(function (card, i) {
       card.onclick = function () { openFoodEdit(matched[i], 'search'); };
     });
+    document.getElementById('r100-direct-btn').onclick = function () { goToDirectEntry(q); };
   }
   input.oninput = renderResults;
-  document.getElementById('r100-search-btn').onclick = renderResults;
   renderResults();
 };
 
 onRecordTab.direct = function () {
   const root = document.getElementById('record-subscreen-direct');
+  const prefill = directPrefillName;
+  directPrefillName = '';
   root.innerHTML =
-    '<input type="text" class="input-text" id="r200-name" placeholder="음식명" />' +
+    '<button class="link" id="r200-back" style="text-align:left; margin:0 0 8px;">← 검색으로 돌아가기</button>' +
+    '<input type="text" class="input-text" id="r200-name" placeholder="음식명" value="' + prefill.replace(/"/g, '&quot;') + '" />' +
     '<input type="tel" inputmode="numeric" class="input-text" id="r200-protein" placeholder="단백질(g)" />' +
     '<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:var(--text); font-size:14px;">' +
     '<input type="checkbox" id="r200-fav" /> ⭐ 자주먹는 목록에 등록</label>' +
     '<button class="btn-primary" id="r200-add" disabled>담기</button>';
+  document.getElementById('r200-back').onclick = function () { switchRecordTab('search'); };
   const nameInput = document.getElementById('r200-name');
   const proteinInput = document.getElementById('r200-protein');
   const addBtn = document.getElementById('r200-add');
@@ -1892,7 +1938,7 @@ onRecordTab.direct = function () {
     if (document.getElementById('r200-fav').checked) {
       S.favorites.push({ name: name, protein: protein });
     }
-    switchRecordTab('direct');
+    switchRecordTab('search');
   };
 };
 
@@ -2280,6 +2326,60 @@ function renderMealBars(mealTotals) {
   });
 }
 
+// 리포트 화면(REPORT-001)용 "연속 달성 스트릭" · "어제 대비 비교" 헬퍼.
+// achieved 판정은 HG-001의 computeDailyHealthScore를 그대로 재사용 — 두 기능 간 달성 기준을 통일하기 위함(재구현하지 않음).
+
+// dateKeyStr을 delta일만큼 이동시킨 dateKeyStr을 반환. hgWeekdayLabelForDateKey와 동일한 파싱 방식(replace(/-/g, '/'))을 재사용.
+function shiftDateKeyByDays(dateKeyStr, delta) {
+  const d = new Date(dateKeyStr.replace(/-/g, '/'));
+  d.setDate(d.getDate() + delta);
+  return dateKey(d);
+}
+
+// dateKeyStr(포함)부터 거슬러 올라가며 연속 목표 달성일 수를 셈.
+// 기록이 아예 없는 날(hasRecords=false)도 미달성으로 취급해 스트릭을 끊음.
+function computeAchievementStreak(dateKeyStr) {
+  const current = computeDailyHealthScore(dateKeyStr);
+  if (!current.achieved) return { achieved: false, count: 0 };
+  let count = 0;
+  let cursorKey = dateKeyStr;
+  while (computeDailyHealthScore(cursorKey).achieved) {
+    count++;
+    cursorKey = shiftDateKeyByDays(cursorKey, -1);
+  }
+  return { achieved: true, count: count };
+}
+
+// 스트릭 정보 -> 카피. 미달성일 때는 아예 표시하지 않음
+// (이 앱은 "0점"처럼 실패/미달성을 부정적으로 드러내지 않는 톤을 전 화면에서 유지함 — hgBuildTodayStatus 참고).
+function buildStreakText(streakInfo) {
+  if (!streakInfo.achieved) return null;
+  if (streakInfo.count <= 1) return '오늘 처음 단백질 목표를 달성했어요!';
+  return '🔥 ' + streakInfo.count + '일 연속 단백질 목표 달성 중!';
+}
+
+// 어제 대비 오늘 총 단백질 섭취량 비교.
+// 어제 기록이 아예 없으면(hasRecords=false) 비교 불가로 보고 표시하지 않음 — 0g와 진짜 "기록 없음"은 다르므로 0 기준으로 오해시키지 않음.
+// 소수점 반올림은 report-protein 표시와 동일한 컨벤션(소수 1자리, Math.round(x*10)/10)을 따름.
+// 차이가 ±2g 이내면 "비슷해요"로 취급(임의 결정 — 사양에 예시로 제시된 마진).
+function computeYesterdayComparisonText(dateKeyStr) {
+  const yesterdayKey = shiftDateKeyByDays(dateKeyStr, -1);
+  const yesterday = computeDailyHealthScore(yesterdayKey);
+  if (!yesterday.hasRecords) return null;
+  const today = computeDailyHealthScore(dateKeyStr);
+  const diff = Math.round((today.total - yesterday.total) * 10) / 10;
+  if (Math.abs(diff) <= 2) return '어제와 비슷해요';
+  if (diff > 0) return '어제보다 ' + diff + 'g 더 섭취했어요';
+  return '어제보다 ' + Math.abs(diff) + 'g 덜 섭취했어요';
+}
+
+// 스트릭 + 어제 대비 비교를 한 줄로 합침(가운뎃점 구분). 둘 다 없으면 빈 문자열 -> 호출부에서 엘리먼트를 숨김.
+function buildReportStreakAndComparisonText(dateKeyStr) {
+  const streakText = buildStreakText(computeAchievementStreak(dateKeyStr));
+  const comparisonText = computeYesterdayComparisonText(dateKeyStr);
+  return [streakText, comparisonText].filter(Boolean).join(' · ');
+}
+
 onEnter['REPORT-001'] = function () {
   document.getElementById('report-title').textContent = formatDateKeyForTitle(reportViewDateKey);
   document.getElementById('report-back').onclick = function () { goTo('HM-001'); };
@@ -2300,6 +2400,15 @@ onEnter['REPORT-001'] = function () {
   badge.style.color = tier.fg;
   badge.style.background = tier.bg;
   document.getElementById('report-fill').style.width = Math.min(100, Math.max(0, pct)) + '%';
+
+  const streakInfoText = buildReportStreakAndComparisonText(reportViewDateKey);
+  const streakInfoEl = document.getElementById('report-streak-info');
+  if (streakInfoText) {
+    streakInfoEl.textContent = streakInfoText;
+    streakInfoEl.style.display = 'block';
+  } else {
+    streakInfoEl.style.display = 'none';
+  }
 
   document.getElementById('report-summary').textContent = buildBalancedMealSummary(items);
 
