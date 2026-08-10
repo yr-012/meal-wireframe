@@ -379,21 +379,67 @@ body {
       </div>
     </div>
 
-    <div class="screen" data-id="MY-PROFILE">
+    <div class="screen" data-id="MY-PAGE">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-        <button class="link" id="my-profile-back" style="margin:0; text-decoration:none; font-size:22px; padding:0 4px;">‹</button>
-        <div class="headline" style="margin:0;">내 정보</div>
+        <button class="link" id="mypage-back" style="margin:0; text-decoration:none; font-size:22px; padding:0 4px;">‹</button>
+        <div class="headline" style="margin:0;">마이페이지</div>
       </div>
-      <div class="card" id="my-profile-subscription-card">
-        <div class="badge-icon badge-lav">💳</div>
-        <div style="flex:1;"><div class="card-label" style="margin:0;">현재 구독번호</div><div class="card-sub" id="my-profile-subscription-preview">-</div></div>
+
+      <div class="card" style="cursor:default;">
+        <div class="badge-icon badge-mint" style="width:56px; height:56px; font-size:26px;">👤</div>
+        <div style="flex:1;"><div class="card-label" id="mypage-nickname" style="margin:0; font-size:17px;">-</div></div>
         <span style="color:var(--text-muted); font-size:18px;">›</span>
       </div>
-      <div class="card" id="my-profile-goal-card">
-        <div class="badge-icon badge-pink">🎯</div>
-        <div style="flex:1;"><div class="card-label" style="margin:0;">목표 설정 정보</div><div class="card-sub" id="my-profile-goal-preview">-</div></div>
+
+      <div class="card" id="mypage-grade-card">
+        <div id="mypage-grade-badge" style="font-size:13px; font-weight:800; padding:4px 12px; border-radius:999px; flex-shrink:0;">-</div>
+        <div style="flex:1;"><div class="card-label" style="margin:0;">현재 내 등급</div></div>
+        <div class="card-sub" id="mypage-grade-preview" style="margin:0;">-</div>
         <span style="color:var(--text-muted); font-size:18px;">›</span>
       </div>
+
+      <div class="card" id="mypage-subscription-banner" style="background:#0B4A36; box-shadow:none;">
+        <div style="flex:1;">
+          <div class="card-label" style="margin:0; color:#fff;">델쥬아 구독 중</div>
+          <div class="card-sub" id="mypage-subscription-expiry" style="color:#9FD8C4;">-</div>
+        </div>
+        <span style="color:#9FD8C4; font-size:18px;">›</span>
+      </div>
+
+      <div class="subtext" style="margin:8px 0 8px;">내 목표</div>
+      <div class="card" style="flex-direction:column; align-items:stretch; padding:0;">
+        <div id="mypage-goal-row" style="display:flex; align-items:center; gap:12px; padding:16px 18px; cursor:pointer;">
+          <div style="flex:1;"><div class="card-label" style="margin:0;">목표 설정 정보</div></div>
+          <div class="card-sub" id="mypage-goal-preview" style="margin:0;">-</div>
+          <span style="color:var(--text-muted); font-size:18px;">›</span>
+        </div>
+        <div style="height:1px; background:#ECECF3; margin:0 18px;"></div>
+        <div id="mypage-body-row" style="display:flex; align-items:center; gap:12px; padding:16px 18px; cursor:pointer;">
+          <div style="flex:1;"><div class="card-label" style="margin:0;">신체 정보</div></div>
+          <div class="card-sub" id="mypage-body-preview" style="margin:0;">-</div>
+          <span style="color:var(--text-muted); font-size:18px;">›</span>
+        </div>
+      </div>
+
+      <div class="subtext" style="margin:20px 0 8px;">설정</div>
+      <div class="card" id="mypage-notify-row">
+        <div style="flex:1;"><div class="card-label" style="margin:0;">알림 설정</div></div>
+        <div class="card-sub" id="mypage-notify-preview" style="margin:0;">-</div>
+        <span style="color:var(--text-muted); font-size:18px;">›</span>
+      </div>
+
+      <div class="subtext" style="margin:20px 0 8px;">보상</div>
+      <div class="card" id="mypage-reward-row">
+        <div class="badge-icon badge-mint">🎁</div>
+        <div style="flex:1;"><div class="card-label" style="margin:0;">단백질 업적</div></div>
+        <span style="color:var(--text-muted); font-size:18px;">›</span>
+      </div>
+
+      <div class="card" id="mypage-support-card" style="flex-direction:column; align-items:center; text-align:center; margin-top:20px; cursor:default;">
+        <div class="card-label" style="margin-bottom:12px;">궁금한 점이 있으신가요?</div>
+        <button class="btn-secondary" id="mypage-support-btn" style="margin:0;">1:1 문의하기</button>
+      </div>
+
       <div class="spacer"></div>
     </div>
 
@@ -405,11 +451,6 @@ body {
       <div class="card" style="flex-direction:column; align-items:stretch; cursor:default;">
         <div class="card-sub" style="margin-bottom:10px;">나의 구독번호</div>
         <div style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:0.5px;" id="my-subscription-number">-</div>
-      </div>
-      <div class="card" id="my-subscription-support">
-        <div class="badge-icon badge-blue">💬</div>
-        <div style="flex:1;"><div class="card-label" style="margin:0;">고객센터 연결하기</div></div>
-        <span style="color:var(--text-muted); font-size:18px;">›</span>
       </div>
       <div class="spacer"></div>
     </div>
@@ -484,21 +525,43 @@ body {
         <div id="hg-grade-badge" style="font-size:28px; font-weight:800; padding:10px 28px; border-radius:999px; margin-bottom:4px;">-</div>
         <div id="hg-grade-score" style="font-size:22px; font-weight:800; color:var(--text);">-</div>
         <div class="card-sub" style="margin-top:1px;">최근 7일 기준</div>
+        <div id="hg-grade-delta" style="margin-top:6px; font-size:12px; font-weight:700; color:var(--text-muted);">-</div>
         <div id="hg-grade-meaning" style="margin-top:18px; font-size:14px; color:var(--text); line-height:1.5;">-</div>
       </div>
 
-      <!-- ② 지금 해야 할 행동: 화면의 핵심. 승급 기회 / 강등 주의 / 유지 3가지 상태 중 하나만 표시 -->
-      <div class="card" id="hg-action-card" style="flex-direction:column; align-items:stretch; padding:20px 18px; border:2px solid transparent;">
-        <div id="hg-action-label" style="align-self:flex-start; font-size:12px; font-weight:800; padding:5px 12px; border-radius:999px; margin-bottom:10px;">-</div>
-        <div id="hg-action-message" style="font-size:16px; font-weight:700; color:var(--text); line-height:1.5;">-</div>
+      <!-- 등급 게이지: 신규. 6개 등급 구간을 점수 폭에 비례한 너비로 나눠 하나의 트랙에 이어붙이고,
+           현재 주간 점수 위치를 트랙 위 마커로 표시(구간 중앙이 아닌 연속 위치). 너비/구간은
+           HG_GRADE_RANGES(기존 상수, 세부 기준表와 동일 출처)를 그대로 읽어서 계산 — 새 숫자를 만들지 않음. -->
+      <div class="card" style="flex-direction:column; align-items:stretch; padding:20px 18px 18px;">
+        <div class="card-sub" style="margin-bottom:16px;">등급 게이지</div>
+        <div style="position:relative; padding-top:26px;">
+          <div id="hg-gauge-marker" style="position:absolute; top:0; left:0; display:flex; flex-direction:column; align-items:center; transform:translateX(-50%); transition:left .2s;">
+            <div id="hg-gauge-marker-score" style="font-size:11px; font-weight:800; color:var(--text); background:var(--surface); padding:1px 6px; border-radius:999px; box-shadow:var(--shadow); white-space:nowrap; margin-bottom:2px;">-</div>
+            <div style="width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid var(--text);"></div>
+          </div>
+          <div id="hg-gauge-track" style="display:flex; width:100%; height:28px; border-radius:10px; overflow:hidden; box-shadow:var(--shadow);"></div>
+        </div>
       </div>
 
-      <!-- ③ 오늘 상태: 진행 중 느낌을 주는 3가지 케이스(기록 없음/목표 미달/목표 달성) -->
+      <!-- ② 지금 해야 할 행동: 화면의 핵심. 승급 기회 / 강등 주의 / 유지 3가지 상태 중 하나만 표시.
+           상태 진단(짧은 배지형 문구) / 상태 설명(왜 그런지 한 줄) / 행동 가이드(오늘 할 일) 3줄 구성. -->
+      <div class="card" id="hg-action-card" style="flex-direction:column; align-items:stretch; padding:20px 18px; border:2px solid transparent;">
+        <div id="hg-action-diagnosis" style="align-self:flex-start; font-size:12px; font-weight:800; padding:5px 12px; border-radius:999px; margin-bottom:10px;">-</div>
+        <div id="hg-action-reason" style="font-size:13px; color:var(--text-muted); line-height:1.5;">-</div>
+        <div id="hg-action-guide" style="font-size:16px; font-weight:700; color:var(--text); margin-top:10px; line-height:1.5;">-</div>
+      </div>
+
+      <!-- ③ 오늘 상태: 진행 중 느낌을 주는 3가지 케이스(기록 없음/목표 미달/목표 달성) + 기록이 있는 날엔
+           단백질/끼니 균형 점수 세부 내역을 아래에 항상 함께 보여줌. 인터랙션(CTA 버튼)은 없음 — 읽기 전용 정보. -->
       <div class="card" style="flex-direction:column; align-items:stretch;">
         <div class="card-sub" style="margin-bottom:8px;">오늘 상태</div>
         <div id="hg-today-headline" style="font-size:16px; font-weight:800; color:var(--text);">-</div>
         <div id="hg-today-body" style="font-size:14px; color:var(--text); margin-top:4px; line-height:1.5;">-</div>
         <div id="hg-today-subtext" style="font-size:12px; color:var(--text-muted); margin-top:4px; display:none;"></div>
+        <div id="hg-today-breakdown" style="display:none; flex-direction:column; gap:2px; margin-top:10px; padding-top:10px; border-top:1px solid #ECECF3;">
+          <div id="hg-today-breakdown-protein" style="font-size:12px; color:var(--text-muted);">-</div>
+          <div id="hg-today-breakdown-meal" style="font-size:12px; color:var(--text-muted);">-</div>
+        </div>
       </div>
 
       <!-- ④ 최근 7일 흐름: 요일 라벨 + 탭하면 하단에 상세 패널. "오늘 진행 중" 캡션은 바 안에 넣지 않고 차트 아래 별도 줄로 분리해 줄바꿈 방지 -->
@@ -516,13 +579,22 @@ body {
         <div id="hg-grade-reference" style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-muted);"></div>
       </div>
 
+      <!-- 건강등급 안내: ⑤와 동일한 톤다운 참고 카드. 점수 계산 방식 자체를 짧게 설명(등급 컷오프 표와는 별개 정보). -->
+      <div class="card" style="flex-direction:column; align-items:stretch; background:#FAFAFC; box-shadow:none; border:1px solid #ECECF3;">
+        <div class="card-sub" style="margin-bottom:8px;">건강등급 안내</div>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-muted); line-height:1.5;">
+          <div>점수 계산 방법: 단백질 섭취 최대 70점 + 끼니 균형 최대 30점</div>
+          <div>최근 7일 계산 방식: 매일 오늘 점수가 더해지고, 가장 오래된 하루의 점수가 빠져요.</div>
+        </div>
+      </div>
+
       <div class="spacer"></div>
     </div>
 
     <div class="screen" data-id="REWARD-COLLECTION">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
         <button class="link" id="reward-collection-back" style="margin:0; text-decoration:none; font-size:22px; padding:0 4px;">‹</button>
-        <div class="headline" style="margin:0;">보상 카드함</div>
+        <div class="headline" style="margin:0;">단백질 업적</div>
       </div>
       <div id="reward-collection-body"></div>
       <div class="spacer"></div>
@@ -551,6 +623,7 @@ const S = {
     nickname: '단백질러버',
     subscription: '프리미엄 구독 중',
     subscriptionNumber: '1234-56-••••',
+    subscriptionExpiry: '2026년 12월 17일',
     gender: 'female',
     age: 32,
     height: 163,
@@ -840,6 +913,19 @@ function hgGradeMeaning(grade) {
   return HG_GRADE_MEANING[grade] || '';
 }
 
+// ①번 "전일 대비 변화" 계산. 채점 로직을 새로 만들지 않고, computeWeeklyHealthGrade를
+// refDate만 하루 앞당겨 그대로 재호출해서 "어제를 기준일로 한 롤링 7일 점수"를 구함
+// (어제 기준 창 = 어제 포함 최근 7일 = 오늘 기준 창에서 하루만 밀린 것과 동일).
+function hgYesterdayWeeklyScore(refDate) {
+  const y = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate() - 1);
+  return computeWeeklyHealthGrade(y).weeklyScore;
+}
+function hgGradeDeltaText(delta) {
+  if (delta > 0) return '어제보다 ' + delta + '점 올랐어요';
+  if (delta < 0) return '어제보다 ' + Math.abs(delta) + '점 낮아졌어요';
+  return '어제와 같아요';
+}
+
 // 오늘 단백질 목표(pct 100%)를 달성했다고 가정했을 때의 가상 주간 등급.
 // 끼니 균형(mealPoints)은 오늘 실제 값을 그대로 유지한다는 전제(단백질만 개선된다고 가정) — 스펙 요구사항.
 // 오늘이 이미 달성 상태(achieved)였다면 achievedCount는 그대로 둠(이중 카운트 방지).
@@ -887,7 +973,8 @@ function hgIsDemotionRisk(result) {
 }
 
 // ②번 "지금 해야 할 행동" 카드 상태 결정. 승급 기회(A) > 강등 주의(C) > 유지(B) 순으로 확인하고
-// 셋 중 하나만 반환함(동시 표시 없음).
+// 셋 중 하나만 반환함(동시 표시 없음). 트리거 조건은 이전과 동일 — 상태별 카피만 진단/설명/가이드
+// 3줄(diagnosis/reason/guide)로 분리해서 반환하도록 리팩터링함(스펙: "지금 해야 할 행동" 카드 재구성).
 function hgComputeActionState(result) {
   const gradeIdx = HG_GRADE_ORDER.indexOf(result.grade);
   const today = result.days[result.days.length - 1];
@@ -902,33 +989,50 @@ function hgComputeActionState(result) {
       // "점수는 그대로 두고 달성일수만 +1" 했을 때 이미 다음 등급에 도달한다면 -> 빈도가 원인(점수는 이미 충분).
       const gradeWithFreqBumpOnly = hgApplyFrequencyGate(hgScoreBand(result.weeklyScore), result.achievedCount + 1);
       const freqBlocked = HG_GRADE_ORDER.indexOf(gradeWithFreqBumpOnly) >= hypoIdx;
-      const message = freqBlocked
+      const guide = freqBlocked
         ? '오늘 목표를 달성하면 목표 달성 ' + (result.achievedCount + 1) + '일째로, ' + nextGrade + ' 조건을 채울 수 있어요.'
         : '오늘 단백질 목표를 달성하면 ' + nextGrade + '로 올라갈 수 있어요.';
-      return { state: 'promotion', label: nextGrade + ' 승급 기회', message: message };
+      return {
+        state: 'promotion',
+        diagnosis: nextGrade + ' 승급 기회예요',
+        reason: '최근 며칠간 단백질 섭취가 좋아지고 있어요.',
+        guide: guide
+      };
     }
   }
 
-  // --- State C: 강등 주의 ---
+  // --- State C: 강등 주의 (문구는 "유지가 필요해요"로 완곡하게 표현, 트리거 조건은 동일) ---
   if (hgIsDemotionRisk(result)) {
     return {
       state: 'demotion',
-      label: '강등 주의',
-      message: '최근 7일 점수가 낮아지고 있어요. 오늘 단백질을 챙기면 ' + result.grade + '등급을 지킬 수 있어요.'
+      diagnosis: result.grade + ' 유지가 필요해요',
+      reason: '최근 7일 점수가 낮아지고 있어요.',
+      guide: '오늘 단백질을 챙기면 ' + result.grade + '등급을 지킬 수 있어요.'
     };
   }
 
   // --- State B: 유지(기본값) ---
   if (result.grade === 'S+') {
-    return { state: 'maintenance', label: 'S+ 유지 중', message: '최고 등급을 유지하고 있어요! 오늘도 이대로 이어가 보세요.' };
+    return {
+      state: 'maintenance',
+      diagnosis: '최고 등급을 유지하고 있어요',
+      reason: '꾸준히 최상위 상태를 지키고 있어요.',
+      guide: '오늘도 이대로 이어가 보세요.'
+    };
   }
   if (result.grade === '등급 측정 중') {
-    return { state: 'maintenance', label: '등급 측정 중', message: '오늘부터 단백질 섭취를 기록하면 등급이 계산되기 시작해요.' };
+    return {
+      state: 'maintenance',
+      diagnosis: '등급 측정을 준비하고 있어요',
+      reason: '아직 최근 7일 기록이 충분하지 않아요.',
+      guide: '오늘부터 단백질 섭취를 기록하면 등급이 계산되기 시작해요.'
+    };
   }
   return {
     state: 'maintenance',
-    label: result.grade + ' 유지 중',
-    message: '오늘도 단백질을 충분히 챙기면 ' + result.grade + '등급을 안정적으로 유지할 수 있어요.'
+    diagnosis: result.grade + '를 안정적으로 유지하고 있어요',
+    reason: '최근 7일 동안 꾸준한 모습을 보이고 있어요.',
+    guide: '오늘도 단백질을 충분히 챙기면 ' + result.grade + '등급을 안정적으로 유지할 수 있어요.'
   };
 }
 
@@ -986,6 +1090,36 @@ const HG_ACTION_STYLES = {
   demotion: { cardBg: 'var(--badge-pink-bg)', cardBorder: 'var(--danger)', labelBg: '#fff', labelFg: 'var(--danger)' }
 };
 
+// 등급 게이지(신규): 트랙을 채우는 6개 구간 순서 + 구간별 색상. HG_GRADE_STYLES(등급 배지 색 램프)와
+// 정확히 같은 톤을 그대로 재사용해서 "무채색(B) -> 진한 오렌지 그라디언트(S+)"로 escalate하는
+// 기존 컬러 언어를 유지함. 배경(bg)은 HG_GRADE_STYLES와 동일, 라벨 글자색(fg)만 트랙 위 가독성을 위해
+// 별도로 지정(S/S+ 배경이 진해서 흰 글자 필요 — HG_GRADE_STYLES.fg와 우연히 대부분 일치함).
+const HG_GAUGE_ZONES = ['B', 'B+', 'A', 'A+', 'S', 'S+'];
+const HG_GAUGE_ZONE_LABEL_FG = {
+  'B': 'var(--badge-blue-fg)', 'B+': 'var(--badge-lav-fg)', 'A': 'var(--badge-mint-fg)',
+  'A+': 'var(--badge-accent-fg)', 'S': '#fff', 'S+': '#fff'
+};
+const HG_GAUGE_TOTAL = 700; // 전체 스케일(0~700) — HG_GRADE_RANGES의 모든 구간 폭 합과 동일
+
+// 등급 게이지 트랙 + 위치 마커 렌더링. 구간 폭/경계는 HG_GRADE_RANGES(기존 등급 컷오프 상수, ⑤ 세부
+// 기준表와 동일 출처)에서 그대로 읽어오고, 여기서 새 점수 경계를 만들지 않음.
+function renderHgGauge(weeklyScore) {
+  const track = document.getElementById('hg-gauge-track');
+  track.innerHTML = HG_GAUGE_ZONES.map(function (g) {
+    const range = HG_GRADE_RANGES[g];
+    const widthPct = (range[1] - range[0] + 1) / HG_GAUGE_TOTAL * 100;
+    const style = HG_GRADE_STYLES[g];
+    return '<div style="flex:0 0 ' + widthPct.toFixed(2) + '%; display:flex; align-items:center; justify-content:center; background:' + style.bg + ';">' +
+      '<span style="font-size:11px; font-weight:800; color:' + HG_GAUGE_ZONE_LABEL_FG[g] + ';">' + g + '</span>' +
+    '</div>';
+  }).join('');
+
+  const posPct = Math.max(0, Math.min(100, weeklyScore / HG_GAUGE_TOTAL * 100));
+  const marker = document.getElementById('hg-gauge-marker');
+  marker.style.left = posPct.toFixed(2) + '%';
+  document.getElementById('hg-gauge-marker-score').textContent = Math.round(weeklyScore) + '점';
+}
+
 const historyStack = [];
 const onEnter = {};
 
@@ -1011,54 +1145,34 @@ function goBack() {
   }
 }
 
-document.getElementById('hm-more-btn').onclick = function () { openMoreSheet(); };
+document.getElementById('hm-more-btn').onclick = function () { goTo('MY-PAGE'); };
 
-const MORE_SHEET_ROWS = [
-  { id: 'more-profile', badge: 'badge-accent', icon: '👤', label: '내 정보', sub: '닉네임 · 구독정보', action: function () { goTo('MY-PROFILE'); } },
-  { id: 'more-notify', badge: 'badge-lav', icon: '🔔', label: '알림설정', sub: '', action: function () { goTo('MY-NOTIFY'); } },
-  { id: 'more-reward-collection', badge: 'badge-mint', icon: '🎁', label: '보상 카드함', sub: '', action: function () { goTo('REWARD-COLLECTION'); } }
-];
-
-function renderMoreSheet() {
-  const body = document.getElementById('cart-sheet-body');
-  body.innerHTML =
-    '<div style="display:flex; align-items:center; justify-content:space-between;">' +
-      '<div class="headline" style="font-size:17px; margin:0;">더보기</div>' +
-      '<button id="more-sheet-close" style="background:none; border:none; font-size:18px; color:var(--text-muted); cursor:pointer; padding:4px;">✕</button>' +
-    '</div>' +
-    MORE_SHEET_ROWS.map(function (r) {
-      return '<div class="card" id="' + r.id + '">' +
-        '<div class="badge-icon ' + r.badge + '">' + r.icon + '</div>' +
-        '<div style="flex:1;"><div class="card-label" style="margin:0;">' + r.label + '</div>' +
-        (r.sub ? '<div class="card-sub">' + r.sub + '</div>' : '') +
-        '</div>' +
-        '<span style="color:var(--text-muted); font-size:18px;">›</span>' +
-      '</div>';
-    }).join('');
-  document.getElementById('more-sheet-close').onclick = closeCartSheet;
-  MORE_SHEET_ROWS.forEach(function (r) {
-    document.getElementById(r.id).onclick = function () {
-      closeCartSheet();
-      r.action();
-    };
-  });
-}
-
-function openMoreSheet() {
-  renderMoreSheet();
-  document.getElementById('cart-sheet').classList.add('visible');
-  document.getElementById('sheet-backdrop').classList.add('visible');
-}
-
-onEnter['MY-PROFILE'] = function () {
-  document.getElementById('my-profile-back').onclick = function () { goTo('HM-001'); openMoreSheet(); };
+onEnter['MY-PAGE'] = function () {
+  document.getElementById('mypage-back').onclick = function () { goTo('HM-001'); };
   const p = S.profile;
-  document.getElementById('my-profile-subscription-preview').textContent = p.subscriptionNumber;
-  const purposeOpt = PURPOSE_OPTIONS.filter(function (o) { return o.id === p.goalType; })[0];
-  const purposeLabel = purposeOpt ? purposeOpt.label : p.goalType;
-  document.getElementById('my-profile-goal-preview').textContent = p.age + '세 · ' + p.height + 'cm · ' + p.weight + 'kg · ' + purposeLabel;
-  document.getElementById('my-profile-subscription-card').onclick = function () { goTo('MY-SUBSCRIPTION'); };
-  document.getElementById('my-profile-goal-card').onclick = function () { goTo('MY-GOAL'); };
+  document.getElementById('mypage-nickname').textContent = p.nickname;
+  document.getElementById('mypage-subscription-expiry').textContent = (p.subscriptionExpiry || '-') + '까지 이용할 수 있어요';
+  document.getElementById('mypage-goal-preview').textContent = '단백질 ' + S.goals.protein + 'g';
+  document.getElementById('mypage-body-preview').textContent = p.height + 'cm · ' + p.weight + 'kg';
+  document.getElementById('mypage-notify-preview').textContent = S.notifySettings.enabled ? '켜짐' : '꺼짐';
+
+  const gradeResult = computeWeeklyHealthGrade(new Date());
+  const gradeStyle = HG_GRADE_STYLES[gradeResult.grade];
+  const gradeBadge = document.getElementById('mypage-grade-badge');
+  gradeBadge.style.background = gradeStyle.bg;
+  gradeBadge.style.color = gradeStyle.fg;
+  gradeBadge.textContent = gradeResult.hasAnyRecords ? gradeResult.grade : '-';
+  document.getElementById('mypage-grade-preview').textContent = gradeResult.hasAnyRecords
+    ? (gradeResult.grade + ' · ' + Math.round(gradeResult.weeklyScore) + '점')
+    : gradeResult.grade;
+  document.getElementById('mypage-grade-card').onclick = function () { goTo('HG-001'); };
+
+  document.getElementById('mypage-subscription-banner').onclick = function () { goTo('MY-SUBSCRIPTION'); };
+  document.getElementById('mypage-goal-row').onclick = function () { goTo('MY-GOAL'); };
+  document.getElementById('mypage-body-row').onclick = function () { goTo('MY-GOAL'); };
+  document.getElementById('mypage-notify-row').onclick = function () { goTo('MY-NOTIFY'); };
+  document.getElementById('mypage-reward-row').onclick = function () { goTo('REWARD-COLLECTION'); };
+  document.getElementById('mypage-support-btn').onclick = function () { openSupportSheet(); };
 };
 
 function renderSupportSheet() {
@@ -1082,11 +1196,8 @@ function openSupportSheet() {
 }
 
 onEnter['MY-SUBSCRIPTION'] = function () {
-  document.getElementById('my-subscription-back').onclick = function () { goTo('MY-PROFILE'); };
+  document.getElementById('my-subscription-back').onclick = function () { goTo('MY-PAGE'); };
   document.getElementById('my-subscription-number').textContent = S.profile.subscriptionNumber;
-  document.getElementById('my-subscription-support').onclick = function () {
-    openSupportSheet();
-  };
 };
 
 const ACTIVITY_OPTIONS = [
@@ -1203,7 +1314,7 @@ function showGoalUpdatedPopup(result) {
   popup.classList.add('visible');
   document.getElementById('mygoal-result-confirm').onclick = function () {
     popup.classList.remove('visible');
-    goTo('MY-PROFILE');
+    goTo('MY-PAGE');
   };
 }
 
@@ -1217,7 +1328,7 @@ onEnter['MY-GOAL'] = function () {
     purpose: S.profile.goalType,
     targetWeight: S.profile.targetWeight
   };
-  document.getElementById('mygoal-back').onclick = function () { goTo('MY-PROFILE'); };
+  document.getElementById('mygoal-back').onclick = function () { goTo('MY-PAGE'); };
   document.getElementById('mygoal-gender-m').onclick = function () { S.goalForm.gender = 'male'; renderMyGoalForm(); };
   document.getElementById('mygoal-gender-f').onclick = function () { S.goalForm.gender = 'female'; renderMyGoalForm(); };
   document.getElementById('mygoal-age').oninput = function (e) { S.goalForm.age = parseFloat(e.target.value) || 0; };
@@ -1285,7 +1396,7 @@ function renderNotifyScreen() {
 }
 
 onEnter['MY-NOTIFY'] = function () {
-  document.getElementById('mynotify-back').onclick = function () { goTo('HM-001'); openMoreSheet(); };
+  document.getElementById('mynotify-back').onclick = function () { goTo('MY-PAGE'); };
   document.getElementById('mynotify-toggle').onchange = function (e) {
     S.notifySettings.enabled = e.target.checked;
     renderNotifyScreen();
@@ -1529,19 +1640,34 @@ function renderHealthGradeScreen() {
   scoreEl.style.display = result.hasAnyRecords ? '' : 'none';
   scoreEl.textContent = result.hasAnyRecords ? Math.round(result.weeklyScore) + '점' : '';
 
+  // 전일 대비 변화: 오늘 창(result.weeklyScore) vs 어제를 기준일로 한 롤링 7일 창의 점수차.
+  const deltaEl = document.getElementById('hg-grade-delta');
+  if (result.hasAnyRecords) {
+    const yesterdayScore = hgYesterdayWeeklyScore(new Date());
+    const delta = Math.round(result.weeklyScore - yesterdayScore);
+    deltaEl.textContent = hgGradeDeltaText(delta);
+    deltaEl.style.display = '';
+  } else {
+    deltaEl.style.display = 'none';
+  }
+
   document.getElementById('hg-grade-meaning').textContent = hgGradeMeaning(result.grade);
 
-  // ② 지금 해야 할 행동 (승급 기회 / 강등 주의 / 유지 중 하나)
+  // 등급 게이지: 6개 구간 트랙 + 현재 주간 점수 위치 마커
+  renderHgGauge(result.weeklyScore);
+
+  // ② 지금 해야 할 행동 (승급 기회 / 강등 주의 / 유지 중 하나) — 상태 진단 / 상태 설명 / 행동 가이드 3줄
   const action = hgComputeActionState(result);
   const actionStyle = HG_ACTION_STYLES[action.state];
   const actionCard = document.getElementById('hg-action-card');
   actionCard.style.background = actionStyle.cardBg;
   actionCard.style.borderColor = actionStyle.cardBorder;
-  const actionLabel = document.getElementById('hg-action-label');
-  actionLabel.textContent = action.label;
-  actionLabel.style.background = actionStyle.labelBg;
-  actionLabel.style.color = actionStyle.labelFg;
-  document.getElementById('hg-action-message').textContent = action.message;
+  const actionDiagnosis = document.getElementById('hg-action-diagnosis');
+  actionDiagnosis.textContent = action.diagnosis;
+  actionDiagnosis.style.background = actionStyle.labelBg;
+  actionDiagnosis.style.color = actionStyle.labelFg;
+  document.getElementById('hg-action-reason').textContent = action.reason;
+  document.getElementById('hg-action-guide').textContent = action.guide;
 
   // ③ 오늘 상태
   const todayStatus = hgBuildTodayStatus(today);
@@ -1553,6 +1679,15 @@ function renderHealthGradeScreen() {
     todaySubtextEl.style.display = '';
   } else {
     todaySubtextEl.style.display = 'none';
+  }
+  // 오늘 기록이 있는 날엔 항상 단백질/끼니 균형 점수 세부 내역을 보여줌(진짜 무기록일 땐 숨김 — 쪼갤 게 없음).
+  const breakdownEl = document.getElementById('hg-today-breakdown');
+  if (today.hasRecords) {
+    document.getElementById('hg-today-breakdown-protein').textContent = '단백질 섭취 ' + today.proteinPoints + '/70점';
+    document.getElementById('hg-today-breakdown-meal').textContent = '끼니 균형 ' + today.mealPoints + '/30점';
+    breakdownEl.style.display = 'flex';
+  } else {
+    breakdownEl.style.display = 'none';
   }
 
   // ④ 최근 7일 흐름
@@ -1597,7 +1732,7 @@ function renderHealthGradeScreen() {
 }
 
 onEnter['HG-001'] = function () {
-  document.getElementById('hg001-back').onclick = function () { goTo('HM-001'); };
+  document.getElementById('hg001-back').onclick = function () { goTo('MY-PAGE'); };
   renderHealthGradeScreen();
 };
 
@@ -1721,7 +1856,6 @@ function renderHome() {
   container.innerHTML =
     '<div id="hm-gauge-wrap" style="background:var(--surface); border-radius:var(--radius-card); box-shadow:var(--shadow); padding:14px 16px 16px; margin:0 auto 10px; width:fit-content; position:relative; transition:filter .3s;">' +
       '<span id="hm-sparkle" style="position:absolute; top:10px; right:18px; font-size:20px; opacity:0; transition:opacity .3s;">✨</span>' +
-      '<button id="hm-grade-trophy-btn" style="position:absolute; top:8px; left:12px; z-index:2; background:none; border:none; font-size:20px; line-height:1; padding:4px; cursor:pointer;" aria-label="건강 등급 보기">🏆</button>' +
       '<svg id="hm-gauge-svg" width="300" height="135" viewBox="0 0 300 135" style="display:block; margin:0 auto;"></svg>' +
     '</div>' +
     '<div style="background:var(--surface); border-radius:var(--radius-pill); padding:12px 24px; display:flex; align-items:baseline; justify-content:center; gap:6px; width:fit-content; margin:0 auto 16px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">' +
@@ -1748,7 +1882,6 @@ function renderHome() {
   document.getElementById('hm-gauge-wrap').style.filter = goalReached ? 'drop-shadow(0 0 14px rgba(255, 138, 61, 0.55))' : 'none';
 
   document.getElementById('hm001-record-btn').onclick = function () { goTo('R-001'); };
-  document.getElementById('hm-grade-trophy-btn').onclick = function () { goTo('HG-001'); };
   container.querySelectorAll('.card[data-meal-detail]').forEach(function (card) {
     card.onclick = function () {
       openMealDetailSheet(card.getAttribute('data-meal-detail'));
@@ -2226,7 +2359,7 @@ function renderRewardCollectionScreen() {
 }
 
 onEnter['REWARD-COLLECTION'] = function () {
-  document.getElementById('reward-collection-back').onclick = function () { goTo('HM-001'); openMoreSheet(); };
+  document.getElementById('reward-collection-back').onclick = function () { goTo('MY-PAGE'); };
   renderRewardCollectionScreen();
 };
 
