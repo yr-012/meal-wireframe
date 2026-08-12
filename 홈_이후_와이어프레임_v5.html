@@ -527,16 +527,17 @@ body {
       <div class="spacer"></div>
     </div>
 
-    <div class="screen" data-id="HG-001">
+    <div class="screen" data-id="HG-001" style="background:#F5F6F8;">
       <button class="link" id="hg001-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
-      <div class="headline" style="margin:0 0 4px;">건강 등급</div>
-      <div class="subtext" style="margin:0 0 16px;">단백질 섭취 기록을 바탕으로 건강점수가 실시간으로 누적돼요</div>
+      <div class="headline" style="margin:0 0 16px;">내 등급</div>
 
-      <!-- ① 현재 등급: 개인화 라벨("{닉네임}의 단백질 섭취 등급") + 2줄 등급/점수(뱃지+"내 등급 X"/"내 단백질 점수 N점")
-           + 우측 "어제보다 ±N점" 델타. MY-PAGE 등급카드와 동일한 2줄 포맷 컨벤션을 그대로 재사용(신규 스펙). -->
+      <!-- ① 현재 등급 카드(신규 스펙 — 2026-08-12 등급상세보기 참고 이미지 그대로 재구성):
+           개인화 라벨 + 뱃지/2줄 등급·점수 + 우측 "어제보다 ±N점" 델타 + "다음 등급까지 N점"/"오늘 최대 획득 가능"
+           + 현재 등급 구간 내 진행 바(0~3,000 전체 게이지가 아니라 "현재 등급 하한~다음 등급 하한" 구간만의 로컬 진행률).
+           구 "등급 게이지"(6구간 트랙) 카드와 구 "②등급 안내" 카드를 이 카드 하나로 통합. -->
       <div class="card" style="flex-direction:column; align-items:stretch; padding:20px 18px;">
-        <div class="card-sub" id="hg-grade-personal-label" style="margin-bottom:12px;">-</div>
-        <div style="display:flex; align-items:center; gap:12px;">
+        <div class="card-sub" id="hg-grade-personal-label" style="margin-bottom:14px;">-</div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
           <div id="hg-grade-badge" style="font-size:16px; font-weight:800; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">-</div>
           <div style="flex:1;">
             <div id="hg-grade-line1" style="font-size:16px; font-weight:800; color:var(--text);">-</div>
@@ -544,41 +545,25 @@ body {
           </div>
           <div id="hg-grade-delta" style="font-size:13px; font-weight:700; color:var(--text-muted); flex-shrink:0; text-align:right;">-</div>
         </div>
-      </div>
-
-      <!-- 등급 게이지: 6개 등급 구간을 점수 폭에 비례한 너비로 나눠 하나의 트랙에 이어붙이고,
-           현재 누적 건강점수(0~3,000) 위치를 트랙 위 마커로 표시(구간 중앙이 아닌 연속 위치). 너비/구간은
-           HG_GRADE_RANGES(신규 상수, 세부 기준表와 동일 출처)를 그대로 읽어서 계산 — 새 숫자를 만들지 않음. -->
-      <div class="card" style="flex-direction:column; align-items:stretch; padding:20px 18px 18px;">
-        <div class="card-sub" style="margin-bottom:16px;">등급 게이지</div>
-        <div style="position:relative; padding-top:26px;">
-          <div id="hg-gauge-marker" style="position:absolute; top:0; left:0; display:flex; flex-direction:column; align-items:center; transform:translateX(-50%); transition:left .2s;">
-            <div id="hg-gauge-marker-score" style="font-size:11px; font-weight:800; color:var(--text); background:var(--surface); padding:1px 6px; border-radius:999px; box-shadow:var(--shadow); white-space:nowrap; margin-bottom:2px;">-</div>
-            <div style="width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid var(--text);"></div>
-          </div>
-          <div id="hg-gauge-track" style="display:flex; width:100%; height:28px; border-radius:10px; overflow:hidden; box-shadow:var(--shadow);"></div>
+        <div id="hg-guide-line1" style="text-align:center; font-size:18px; font-weight:800; color:var(--text);">-</div>
+        <div id="hg-guide-sub" style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:4px; margin-bottom:14px;">-</div>
+        <div id="hg-tier-progress-track" style="width:100%; height:8px; border-radius:999px; background:#E7E9EE; overflow:hidden;">
+          <div id="hg-tier-progress-fill" style="height:100%; border-radius:999px; background:var(--badge-mint-fg); width:0%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+          <span id="hg-tier-progress-start" style="font-size:12px; font-weight:700; color:var(--text);">-</span>
+          <span id="hg-tier-progress-end" style="font-size:12px; color:var(--text-muted);">-</span>
         </div>
       </div>
 
-      <!-- ② 등급 안내: 기존 "지금 해야 할 행동" 3줄(진단/설명/가이드) 카드를 신규 스펙의 2줄 포맷으로 단순화.
-           승급 기회 상태일 때만 강조 줄이 "오늘 {다음등급}로 승급할 수 있어요!"로 바뀌고, 유지 필요/유지(안정) 상태에서는
-           hgComputeActionState()가 이미 계산해둔 guide 문구를 그대로 재사용함(상태 판정 로직/임계값은 변경 없음 —
-           hgBuildGradeGuidance는 표시용 카피만 다시 조합하는 순수 함수). -->
-      <div class="card" style="flex-direction:column; align-items:stretch; padding:20px 18px;">
-        <div class="card-sub" style="margin-bottom:12px;">등급 안내</div>
-        <div id="hg-guide-line1" style="text-align:center; font-size:16px; font-weight:800; color:var(--text);">-</div>
-        <div id="hg-guide-highlight" style="text-align:center; font-size:15px; font-weight:800; margin-top:8px;">-</div>
-        <div id="hg-guide-sub" style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:6px;">-</div>
-      </div>
-
-      <!-- 관리 현황(신규): 히스토리 시작일부터 오늘까지 누적 기록 통계 4줄. computeHealthScoreBreakdown()이
-           computeHealthScore()와 같은 일별 시뮬레이션을 재사용해서 계산함(기존 computeHealthScore 동작은 그대로 유지). -->
+      <!-- 관리 현황: 히스토리 시작일부터 오늘까지 누적 기록 통계 4줄(단백질 섭취일/최근7일 목표달성일/쌓은점수/누적차감점수).
+           computeHealthScoreBreakdown()이 computeHealthScore()와 같은 일별 시뮬레이션을 재사용해서 계산함(기존 로직 그대로). -->
       <div class="card" style="flex-direction:column; align-items:stretch;">
-        <div class="card-sub" style="margin-bottom:10px;">관리 현황</div>
+        <div class="card-sub" style="margin-bottom:10px;">최근 관리 현황</div>
         <div id="hg-status-rows" style="display:flex; flex-direction:column; gap:10px;"></div>
       </div>
 
-      <!-- ③ 오늘 상태: 진행 중 느낌을 주는 3가지 케이스(기록 없음/목표 미달/목표 달성) + 기록이 있는 날엔
+      <!-- 오늘 상태: 진행 중 느낌을 주는 3가지 케이스(기록 없음/목표 미달/목표 달성) + 기록이 있는 날엔
            단백질/끼니 균형 점수 세부 내역을 아래에 항상 함께 보여줌. 인터랙션(CTA 버튼)은 없음 — 읽기 전용 정보. -->
       <div class="card" style="flex-direction:column; align-items:stretch;">
         <div class="card-sub" style="margin-bottom:8px;">오늘 상태</div>
@@ -591,7 +576,7 @@ body {
         </div>
       </div>
 
-      <!-- ④ 최근 7일 흐름: 요일 라벨 + 탭하면 하단에 상세 패널. "오늘 진행 중" 캡션은 바 안에 넣지 않고 차트 아래 별도 줄로 분리해 줄바꿈 방지 -->
+      <!-- 최근 7일 흐름: 요일 라벨 + 탭하면 하단에 상세 패널. "오늘 진행 중" 캡션은 바 안에 넣지 않고 차트 아래 별도 줄로 분리해 줄바꿈 방지 -->
       <div class="card" style="flex-direction:column; align-items:stretch;">
         <div class="card-sub" style="margin-bottom:4px;">최근 7일 흐름</div>
         <div id="hg-history-achieved-caption" style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">-</div>
@@ -601,10 +586,18 @@ body {
         <div id="hg-history-detail-panel" style="flex-direction:column; align-items:flex-start; display:none; margin-top:14px; padding-top:14px; border-top:1px solid #ECECF3;"></div>
       </div>
 
-      <!-- 세부 기준/건강등급 안내 카드를 제거하고, 신규 스펙에 따라 탭하면 팝업이 뜨는 링크 2줄로 대체.
-           팝업 내용 자체(점수 획득표/등급 컷오프표)는 그대로 재사용하고 표시 위치만 팝업으로 옮김. -->
-      <div id="hg-link-guide" style="font-size:13px; color:var(--text); text-decoration:underline; cursor:pointer; margin-bottom:10px;">단백질 점수는 어떻게 쌓이나요?</div>
-      <div id="hg-link-criteria" style="font-size:13px; color:var(--text); text-decoration:underline; cursor:pointer;">전체 등급 기준 보기</div>
+      <!-- 전체 등급 기준(신규 스펙: 팝업 → 항상 보이는 인라인 카드로 전환). 현재 등급 행만 민트그린 강조,
+           나머지는 무채색 — renderHgCriteriaRows()가 행을 렌더링. -->
+      <div class="card" style="flex-direction:column; align-items:stretch;">
+        <div class="card-sub" style="margin-bottom:10px;">전체 등급 기준</div>
+        <div id="hg-criteria-rows" style="display:flex; flex-direction:column; gap:2px;"></div>
+      </div>
+
+      <!-- 단백질 점수는 어떻게 쌓이나요: 탭하면 팝업(점수 획득표)이 뜨는 리스트 행. 내용 자체는 변경 없음. -->
+      <div class="card" id="hg-link-guide" style="cursor:pointer;">
+        <div style="flex:1;"><div class="card-label" style="margin:0;">단백질 점수는 어떻게 쌓이나요?</div></div>
+        <span style="color:var(--text-muted); font-size:18px;">›</span>
+      </div>
 
       <div class="spacer"></div>
     </div>
@@ -816,20 +809,6 @@ const HG_GRADE_STYLES = {
   'S+': { bg: 'linear-gradient(135deg, #FFC495, #FF7A1F)', fg: '#fff' }
 };
 
-// "전체 등급 기준" 팝업 전용 색상표. Figma가 이 팝업에서만 S/S+는 보라(badge-lav), A/A+는 파랑(badge-blue),
-// B/B+는 초록(badge-mint) 계열로 등급을 3개 색상군으로 묶어 보여주는 새 배색을 명확하게 의도적으로 보여줘서
-// (기존 6색 무채색->오렌지 escalation과는 다른 스킴), 그 부분만 새 hex 없이 기존 --badge-* 토큰을 재사용해
-// 그대로 따름. 단, ①번 카드 뱃지/등급 게이지(HG_GRADE_STYLES)는 스펙상 "변경 없음"이라고 명시된 부분이라
-// 그대로 두고, 이 신규 배색은 팝업 범위로만 한정함(전역 변경 시 게이지 톤 escalation이 깨짐).
-const HG_GRADE_LIST_STYLES = {
-  'B': { bg: 'var(--badge-mint-bg)', fg: 'var(--badge-mint-fg)' },
-  'B+': { bg: 'var(--badge-mint-bg)', fg: 'var(--badge-mint-fg)' },
-  'A': { bg: 'var(--badge-blue-bg)', fg: 'var(--badge-blue-fg)' },
-  'A+': { bg: 'var(--badge-blue-bg)', fg: 'var(--badge-blue-fg)' },
-  'S': { bg: 'var(--badge-lav-bg)', fg: 'var(--badge-lav-fg)' },
-  'S+': { bg: 'var(--badge-lav-bg)', fg: 'var(--badge-lav-fg)' }
-};
-
 // 특정 날짜(dateKeyStr) 하루치 단백질 섭취량(A, 최대 70점) 점수.
 // 그날 유효했던 목표(getGoalsForDate)로 나눠 %를 구함 — 과거 목표 변경 이력을 반영.
 // hasRecords가 false인 날은 0을 반환하지만, 실제로는 hgDayDelta가 이 값을 쓰지 않고 -50 고정값으로
@@ -967,55 +946,6 @@ function hgGradeDeltaText(delta) {
   return '어제보다 ' + sign + Math.abs(delta) + '점';
 }
 
-// ②번 "지금 해야 할 행동" 카드 상태 결정. 승급 기회 > 유지 필요 > 유지(안정) 순으로 확인하고
-// 셋 중 하나만 반환함(동시 표시 없음).
-// 임계값(승급 기회: 다음 등급까지 <=100점 / 유지 필요: 현재 등급 하한 대비 <50점)은 스펙 문서의 정성적
-// 설명("현재 점수와 다음 등급까지의 거리를 활용해 상태를 제공한다")을 구체적 숫자로 옮긴 구현 판단(judgment
-// call)임 — 기획자 확인 필요.
-function hgComputeActionState(currentScore, currentGrade) {
-  if (currentGrade === '등급 측정 중') {
-    return {
-      state: 'maintenance',
-      diagnosis: '아직 등급을 측정할 수 없어요',
-      reason: '단백질 섭취 기록이 아직 없어요.',
-      guide: '오늘 첫 단백질 기록을 시작해보세요.'
-    };
-  }
-
-  const gradeIdx = HG_GRADE_ORDER.indexOf(currentGrade);
-  const nextGrade = gradeIdx >= 0 && gradeIdx < HG_GRADE_ORDER.length - 1 ? HG_GRADE_ORDER[gradeIdx + 1] : null;
-  const currentTierLowerBound = HG_GRADE_RANGES[currentGrade][0];
-
-  // --- 승급 기회: 오늘 하루 최대 +100점으로 다음 등급 하한을 넘을 수 있는 경우 ---
-  if (nextGrade && (HG_GRADE_RANGES[nextGrade][0] - currentScore) <= 100) {
-    const needed = HG_GRADE_RANGES[nextGrade][0] - currentScore;
-    return {
-      state: 'promotion',
-      diagnosis: nextGrade + ' 승급 기회예요',
-      reason: '다음 등급까지 ' + needed + '점 남았어요.',
-      guide: '오늘 단백질 목표를 달성하면 ' + nextGrade + '로 올라갈 수 있어요.'
-    };
-  }
-
-  // --- 유지가 필요한 상태: 미활동일 -50점 한 번이면 현재 등급 하한 아래로 떨어지는 경우 ---
-  if ((currentScore - currentTierLowerBound) < 50) {
-    return {
-      state: 'demotion',
-      diagnosis: currentGrade + ' 유지가 필요해요',
-      reason: '오늘 단백질을 기록하지 않으면 등급이 내려갈 수 있어요.',
-      guide: '오늘 단백질을 챙기면 ' + currentGrade + '등급을 지킬 수 있어요.'
-    };
-  }
-
-  // --- 유지 상태(안정) ---
-  return {
-    state: 'maintenance',
-    diagnosis: currentGrade + '를 안정적으로 유지하고 있어요',
-    reason: '꾸준한 단백질 관리가 이어지고 있어요.',
-    guide: '오늘도 단백질을 챙기면 ' + currentGrade + '등급을 계속 지킬 수 있어요.'
-  };
-}
-
 // ③번 "오늘 상태" 카드용 문구 계산. DOM에 접근하지 않는 순수 함수(테스트 용이성을 위해 분리).
 function hgBuildTodayStatus(today) {
   if (!today.hasRecords) {
@@ -1063,41 +993,49 @@ function hgHistoryDetailText(day) {
   };
 }
 
-// ②번 카드 상태별 색상. 새 hex 없이 기존 badge 토큰만 재사용(승급=accent/primary, 유지=mint, 강등=pink/danger).
-const HG_ACTION_STYLES = {
-  promotion: { cardBg: 'var(--badge-accent-bg)', cardBorder: 'var(--primary)', labelBg: '#fff', labelFg: 'var(--primary)' },
-  maintenance: { cardBg: 'var(--badge-mint-bg)', cardBorder: 'var(--badge-mint-fg)', labelBg: '#fff', labelFg: 'var(--badge-mint-fg)' },
-  demotion: { cardBg: 'var(--badge-pink-bg)', cardBorder: 'var(--danger)', labelBg: '#fff', labelFg: 'var(--danger)' }
-};
+// 카드① 하단 "다음 등급까지 N점" + 등급 내 진행 바 계산. 전체 0~3,000 스케일이 아니라
+// "현재 등급 하한 ~ 다음 등급 하한" 구간만의 로컬 진행률을 보여주는 신규 스펙(2026-08-12 참고 이미지).
+// HG_GRADE_RANGES(기존 등급 컷오프 상수)를 그대로 읽어서 계산하고 새 점수 경계를 만들지 않음.
+function hgBuildTierProgress(currentScore, currentGrade, today) {
+  const remainingToday = Math.max(0, 100 - (today.hasRecords ? today.dailyScore : 0));
+  const sub = '오늘 최대 +' + remainingToday + '점 획득 가능';
 
-// 등급 게이지(신규): 트랙을 채우는 6개 구간 순서 + 구간별 색상. HG_GRADE_STYLES(등급 배지 색 램프)와
-// 정확히 같은 톤을 그대로 재사용해서 "무채색(B) -> 진한 오렌지 그라디언트(S+)"로 escalate하는
-// 기존 컬러 언어를 유지함. 배경(bg)은 HG_GRADE_STYLES와 동일, 라벨 글자색(fg)만 트랙 위 가독성을 위해
-// 별도로 지정(S/S+ 배경이 진해서 흰 글자 필요 — HG_GRADE_STYLES.fg와 우연히 대부분 일치함).
-const HG_GAUGE_ZONES = ['B', 'B+', 'A', 'A+', 'S', 'S+'];
-const HG_GAUGE_ZONE_LABEL_FG = {
-  'B': 'var(--badge-blue-fg)', 'B+': 'var(--badge-lav-fg)', 'A': 'var(--badge-mint-fg)',
-  'A+': 'var(--badge-accent-fg)', 'S': '#fff', 'S+': '#fff'
-};
-const HG_GAUGE_TOTAL = 3000; // 전체 스케일(0~3,000) — HG_GRADE_RANGES의 모든 구간 폭 합과 동일
+  if (currentGrade === '등급 측정 중') {
+    return {
+      line1: '아직 등급을 측정할 수 없어요',
+      sub: '오늘 첫 단백질 기록을 시작해보세요.',
+      progressPct: 0,
+      leftLabel: '-',
+      rightLabel: '-'
+    };
+  }
 
-// 등급 게이지 트랙 + 위치 마커 렌더링. 구간 폭/경계는 HG_GRADE_RANGES(신규 0~3,000 등급 컷오프 상수, ⑤ 세부
-// 기준表와 동일 출처)에서 그대로 읽어오고, 여기서 새 점수 경계를 만들지 않음.
-function renderHgGauge(score) {
-  const track = document.getElementById('hg-gauge-track');
-  track.innerHTML = HG_GAUGE_ZONES.map(function (g) {
-    const range = HG_GRADE_RANGES[g];
-    const widthPct = (range[1] - range[0] + 1) / HG_GAUGE_TOTAL * 100;
-    const style = HG_GRADE_STYLES[g];
-    return '<div style="flex:0 0 ' + widthPct.toFixed(2) + '%; display:flex; align-items:center; justify-content:center; background:' + style.bg + ';">' +
-      '<span style="font-size:11px; font-weight:800; color:' + HG_GAUGE_ZONE_LABEL_FG[g] + ';">' + g + '</span>' +
-    '</div>';
-  }).join('');
+  const gradeIdx = HG_GRADE_ORDER.indexOf(currentGrade);
+  const nextGrade = gradeIdx >= 0 && gradeIdx < HG_GRADE_ORDER.length - 1 ? HG_GRADE_ORDER[gradeIdx + 1] : null;
+  const currentTierLowerBound = HG_GRADE_RANGES[currentGrade][0];
 
-  const posPct = Math.max(0, Math.min(100, score / HG_GAUGE_TOTAL * 100));
-  const marker = document.getElementById('hg-gauge-marker');
-  marker.style.left = posPct.toFixed(2) + '%';
-  document.getElementById('hg-gauge-marker-score').textContent = Math.round(score) + '점';
+  if (!nextGrade) {
+    // 최고 등급(S+)엔 "다음 등급" 개념이 없음 — 바를 꽉 채우고 오른쪽 라벨은 비움
+    return {
+      line1: '최고 등급 ' + currentGrade + '을 유지하고 있어요',
+      sub: sub,
+      progressPct: 100,
+      leftLabel: currentGrade + '・' + currentTierLowerBound.toLocaleString() + '점',
+      rightLabel: ''
+    };
+  }
+
+  const nextTierLowerBound = HG_GRADE_RANGES[nextGrade][0];
+  const needed = Math.max(0, nextTierLowerBound - currentScore);
+  const progressPct = Math.max(0, Math.min(100, (currentScore - currentTierLowerBound) / (nextTierLowerBound - currentTierLowerBound) * 100));
+
+  return {
+    line1: '다음 등급(' + nextGrade + ')까지 ' + needed + '점',
+    sub: sub,
+    progressPct: progressPct,
+    leftLabel: currentGrade + '・' + currentTierLowerBound.toLocaleString() + '점',
+    rightLabel: nextGrade + '・' + nextTierLowerBound.toLocaleString() + '점'
+  };
 }
 
 const historyStack = [];
@@ -1613,43 +1551,6 @@ function renderHgHistoryDetailPanel(days, idx) {
   panel.style.display = 'flex';
 }
 
-// ②번 "등급 안내" 카드용 2줄+강조줄+서브라인 카피 계산. hgComputeActionState()의 상태 판정(승급 기회/유지
-// 필요/유지 안정)과 임계값은 전혀 건드리지 않고, 그 결과를 새 포맷의 표시 문구로 다시 조합하기만 하는
-// 순수 함수. 승급 기회가 아닌 두 상태(유지 필요/유지 안정)는 Figma가 승급 가능 상태만 보여줘서 정확한
-// 카피가 없었기 때문에, 기존에 이미 있던 action.guide 문구를 그대로 강조줄에 재사용하는 판단(judgment
-// call)을 내림 — 기획자 확인 필요.
-function hgBuildGradeGuidance(currentScore, currentGrade, today) {
-  const action = hgComputeActionState(currentScore, currentGrade);
-  const actionStyle = HG_ACTION_STYLES[action.state];
-  // "오늘 최대 +N점 획득 가능": 하루 만점(100)에서 오늘 이미 쌓인 A+B 점수를 뺀 값.
-  // (Figma 두 데모 상태를 비교해보면 어제보다 델타가 0일 때 100, +15일 때 85로 나와서
-  // "오늘 이미 얻은 점수만큼 오늘 더 얻을 수 있는 여지가 줄어든다"는 규칙으로 역산함.)
-  const remainingToday = Math.max(0, 100 - (today.hasRecords ? today.dailyScore : 0));
-  const sub = '오늘 최대 +' + remainingToday + '점 획득 가능';
-
-  if (currentGrade === '등급 측정 중') {
-    return { line1: action.diagnosis, highlight: action.guide, highlightColor: actionStyle.labelFg, sub: sub };
-  }
-
-  const gradeIdx = HG_GRADE_ORDER.indexOf(currentGrade);
-  const nextGrade = gradeIdx >= 0 && gradeIdx < HG_GRADE_ORDER.length - 1 ? HG_GRADE_ORDER[gradeIdx + 1] : null;
-
-  if (!nextGrade) {
-    // 최고 등급(S+)엔 "다음 등급" 개념이 없음
-    return { line1: '최고 등급 ' + currentGrade + '을 유지하고 있어요', highlight: action.guide, highlightColor: actionStyle.labelFg, sub: sub };
-  }
-
-  const needed = Math.max(0, HG_GRADE_RANGES[nextGrade][0] - currentScore);
-  const line1 = '다음 등급(' + nextGrade + ')까지 ' + needed + '점';
-
-  if (action.state === 'promotion') {
-    return { line1: line1, highlight: '오늘 ' + nextGrade + '로 승급할 수 있어요!', highlightColor: actionStyle.labelFg, sub: sub };
-  }
-
-  // 유지 필요/유지(안정): 오늘 하루만으로는 승급이 어려운 상태 — 기존 guide 문구를 강조줄에 그대로 재사용
-  return { line1: line1, highlight: action.guide, highlightColor: actionStyle.labelFg, sub: sub };
-}
-
 function renderHealthGradeScreen() {
   const todayKey = dateKey(new Date());
   const currentScore = computeHealthScore(todayKey);
@@ -1679,16 +1580,14 @@ function renderHealthGradeScreen() {
     deltaEl.style.display = 'none';
   }
 
-  // 등급 게이지: 6개 구간 트랙 + 현재 누적 건강점수 위치 마커(0~3,000 스케일) — 변경 없음
-  renderHgGauge(currentScore);
-
-  // ② 등급 안내(기존 "지금 해야 할 행동" 3줄 카드를 단순화)
-  const guidance = hgBuildGradeGuidance(currentScore, currentGrade, today);
-  document.getElementById('hg-guide-line1').textContent = guidance.line1;
-  const highlightEl = document.getElementById('hg-guide-highlight');
-  highlightEl.textContent = guidance.highlight;
-  highlightEl.style.color = guidance.highlightColor;
-  document.getElementById('hg-guide-sub').textContent = guidance.sub;
+  // 카드① 하단: "다음 등급까지 N점" + 등급 내 진행 바(신규 스펙 — 전체 0~3,000 게이지가 아니라
+  // 현재 등급 구간 내 로컬 진행률만 보여줌).
+  const tierProgress = hgBuildTierProgress(currentScore, currentGrade, today);
+  document.getElementById('hg-guide-line1').textContent = tierProgress.line1;
+  document.getElementById('hg-guide-sub').textContent = tierProgress.sub;
+  document.getElementById('hg-tier-progress-fill').style.width = tierProgress.progressPct + '%';
+  document.getElementById('hg-tier-progress-start').textContent = tierProgress.leftLabel;
+  document.getElementById('hg-tier-progress-end').textContent = tierProgress.rightLabel;
 
   // 최근 7일(오늘 포함) 일별 breakdown을 미리 계산해서 "관리 현황"(achievedCount)과
   // ④ 최근 7일 흐름 막대 렌더링에서 함께 재사용함.
@@ -1760,9 +1659,11 @@ function renderHealthGradeScreen() {
     };
   });
 
-  // 세부 기준 카드 / 건강등급 안내 카드를 제거하고, 탭하면 팝업이 뜨는 링크 2줄로 대체(신규 스펙).
+  // 전체 등급 기준(신규 스펙: 팝업 -> 항상 보이는 인라인 카드). 현재 등급 행만 민트그린(--badge-mint-*)
+  // 강조, 나머지는 무채색.
+  document.getElementById('hg-criteria-rows').innerHTML = renderHgCriteriaRows(currentGrade);
+
   document.getElementById('hg-link-guide').onclick = function () { showHgPointsGuidePopup(); };
-  document.getElementById('hg-link-criteria').onclick = function () { showHgGradeCriteriaPopup(currentScore, currentGrade); };
 }
 
 // 팝업 1 — "단백질 점수는 어떻게 쌓이나요?": 예전 "건강등급 안내" 인라인 카드에 있던 점수 획득 규칙을
@@ -1820,35 +1721,24 @@ function showHgPointsGuidePopup() {
   popup.onclick = function (e) { if (e.target === popup) close(); };
 }
 
-// 팝업 2 — "전체 등급 기준": HG_GRADE_RANGES(등급 컷오프 상수, 기존과 동일 출처) 값을 그대로 읽어와 6개 등급을
-// 나열. 배색은 이 팝업 전용 HG_GRADE_LIST_STYLES(보라/파랑/초록 3색군 — Figma가 명확하게 보여준 신규 배색)를 씀.
-function showHgGradeCriteriaPopup(currentScore, currentGrade) {
-  const popup = document.getElementById('feedback-popup');
+// "전체 등급 기준" 인라인 카드 행 렌더링(신규 스펙: 팝업 -> 항상 보이는 카드). HG_GRADE_RANGES(등급
+// 컷오프 상수, 기존과 동일 출처) 값을 그대로 읽어와 6개 등급을 나열. 현재 등급 행만 --badge-mint-*
+// (기존 "성공/달성" 초록 톤)로 강조하고 나머지는 무채색.
+function renderHgCriteriaRows(currentGrade) {
   const order = ['S+', 'S', 'A+', 'A', 'B+', 'B'];
-  const rows = order.map(function (g) {
+  return order.map(function (g) {
     const range = HG_GRADE_RANGES[g];
-    const listStyle = HG_GRADE_LIST_STYLES[g];
     const isCurrent = g === currentGrade;
+    const badgeBg = isCurrent ? 'var(--badge-mint-bg)' : '#F0F0F4';
+    const badgeFg = isCurrent ? 'var(--badge-mint-fg)' : 'var(--text-muted)';
+    const textColor = isCurrent ? 'var(--badge-mint-fg)' : 'var(--text-muted)';
     return '<div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:12px;' +
-        (isCurrent ? ' background:var(--badge-accent-bg);' : '') + '">' +
-      '<div style="width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; background:' + listStyle.bg + '; color:' + listStyle.fg + ';">' + g + '</div>' +
-      '<div style="flex:1; text-align:left; font-size:13px; font-weight:' + (isCurrent ? '800' : '600') + '; color:var(--text);">' + g + '</div>' +
-      '<div style="font-size:13px; color:var(--text); text-align:right;">' + range[0].toLocaleString() + '점 ~ ' + range[1].toLocaleString() + '점</div>' +
+        (isCurrent ? ' background:var(--badge-mint-bg);' : '') + '">' +
+      '<div style="width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; background:' + badgeBg + '; color:' + badgeFg + ';">' + g + '</div>' +
+      '<div style="flex:1; text-align:left; font-size:13px; font-weight:' + (isCurrent ? '800' : '600') + '; color:' + textColor + ';">' + g + '</div>' +
+      '<div style="font-size:13px; color:' + textColor + '; text-align:right; font-weight:' + (isCurrent ? '700' : '400') + ';">' + range[0].toLocaleString() + '점 ~ ' + range[1].toLocaleString() + '점</div>' +
     '</div>';
   }).join('');
-  popup.innerHTML =
-    '<div class="popup-card" style="position:relative; max-height:80vh; overflow-y:auto;">' +
-      '<button id="hg-criteria-popup-close" style="position:absolute; top:12px; right:12px; background:none; border:none; font-size:18px; color:var(--text-muted); cursor:pointer; padding:4px; line-height:1;">✕</button>' +
-      '<div class="headline" style="font-size:18px; margin:0 0 8px;">전체 등급 기준</div>' +
-      '<div class="subtext" style="margin-bottom:14px;">일정 단백질 점수가 쌓이면 다음 등급으로 올라가요.</div>' +
-      '<div style="background:var(--badge-accent-bg); color:var(--primary); font-weight:800; font-size:14px; padding:10px; border-radius:12px; margin-bottom:14px;">현재 나의 단백질 점수 ' + currentScore + '점</div>' +
-      '<div style="display:flex; flex-direction:column; gap:2px;">' + rows + '</div>' +
-      '<div style="margin-top:16px; font-size:12px; color:var(--text-muted); text-align:center;">등급은 단백질 점수에 따라 실시간으로 반영돼요.</div>' +
-    '</div>';
-  popup.classList.add('visible');
-  const close = function () { popup.classList.remove('visible'); popup.onclick = null; };
-  document.getElementById('hg-criteria-popup-close').onclick = close;
-  popup.onclick = function (e) { if (e.target === popup) close(); };
 }
 
 onEnter['HG-001'] = function () {
