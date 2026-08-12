@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>식단 관리 서비스 - 서비스진입/온보딩 와이어프레임</title>
+<style>
+:root {
+  /* 8/12 리텍스처링 — 홈_이후_와이어프레임_v6.html과 동일 토큰(Wrike 스타일 레퍼런스 기준, 오렌지→그린/네이비). */
+  --bg: #F2F5FA;
+  --surface: #FFFFFF;
+  --primary: #00873E;
+  --primary-vivid: #00E05C;
+  --disabled-bg: #E1E5EC;
+  --disabled-text: #737A86;
+  --text: #162136;
+  --text-muted: #657694;
+  --danger: #D6446B;
+  --badge-mint-bg: #D7F5E3; --badge-mint-fg: #00873E;
+  --badge-pink-bg: #FBE4EA; --badge-pink-fg: #D6446B;
+  --badge-blue-bg: #DCEAFB; --badge-blue-fg: #0073D3;
+  --badge-lav-bg: #E2E7F2; --badge-lav-fg: #2B3A57;
+  --badge-accent-bg: #D7F5E3; --badge-accent-fg: #00873E;
+  --border-hairline: #E7EAF1;
+  --border-input: #BFC7D9;
+  --shadow: 0 12px 24px -16px rgba(22, 33, 54, 0.22);
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; }
+body {
+  font-family: var(--font);
+  background:#14142b;
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh;
+}
+.device {
+  width:390px; height:844px;
+  background:var(--bg);
+  border-radius:44px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 24px 64px rgba(0,0,0,0.45);
+  display:flex; flex-direction:column;
+  border:8px solid #0b0b18;
+}
+.statusbar {
+  display:flex; justify-content:space-between;
+  padding:18px 28px 6px;
+  font-weight:600; font-size:15px; color:var(--text);
+  flex-shrink:0;
+}
+.screens { flex:1; position:relative; }
+.screen {
+  display:none; position:absolute; inset:0;
+  flex-direction:column; overflow-y:auto;
+  padding:8px 24px 32px;
+}
+.screen.active { display:flex; }
+.headline { font-size:22px; font-weight:800; color:var(--text); margin:8px 0 4px; }
+.subtext { font-size:14px; color:var(--text-muted); margin:0 0 20px; line-height:1.5; }
+.card {
+  background:var(--surface); border-radius:var(--radius-card);
+  box-shadow:var(--shadow);
+  padding:16px 18px; margin-bottom:12px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer;
+}
+.badge-icon {
+  width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.badge-mint { background:var(--badge-mint-bg); color:var(--badge-mint-fg); }
+.badge-pink { background:var(--badge-pink-bg); color:var(--badge-pink-fg); }
+.badge-blue { background:var(--badge-blue-bg); color:var(--badge-blue-fg); }
+.badge-lav { background:var(--badge-lav-bg); color:var(--badge-lav-fg); }
+.badge-accent { background:var(--badge-accent-bg); color:var(--badge-accent-fg); }
+.card-label { flex:1; font-size:15px; font-weight:600; color:var(--text); }
+.card-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.check-circle {
+  width:24px; height:24px; border-radius:50%;
+  border:2px solid var(--border-input); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:#fff;
+}
+.check-circle.checked { background:var(--primary); border-color:var(--primary); }
+.spacer { flex:1; }
+.btn-primary {
+  width:100%; padding:16px; border:none; border-radius:var(--radius-pill);
+  background:var(--primary); color:#fff; font-size:16px; font-weight:700;
+  cursor:pointer; margin-top:auto; flex-shrink:0;
+}
+.btn-primary:disabled { background:var(--disabled-bg); color:var(--disabled-text); cursor:not-allowed; }
+.btn-secondary {
+  width:100%; padding:14px; border:2px solid var(--primary); border-radius:var(--radius-pill);
+  background:transparent; color:var(--primary); font-size:15px; font-weight:700;
+  cursor:pointer; margin-top:8px; flex-shrink:0;
+}
+.link { color:var(--primary); font-size:14px; text-align:center; display:block; margin-top:12px; text-decoration:underline; cursor:pointer; background:none; border:none; padding:6px; flex-shrink:0; }
+.input-text {
+  width:100%; padding:16px; border-radius:16px; border:1px solid var(--border-input);
+  font-size:16px; margin-bottom:16px; background:#fff; color:var(--text);
+}
+.input-text:focus { outline:2px solid var(--primary); }
+.skip-link { position:absolute; top:20px; right:24px; font-size:14px; color:var(--text-muted); background:none; border:none; cursor:pointer; z-index:5; }
+.overlay-backdrop {
+  display:none; position:absolute; inset:0; background:rgba(20,20,40,0.4); z-index:30;
+}
+.overlay-backdrop.visible { display:block; }
+.bottom-sheet {
+  position:absolute; left:0; right:0; bottom:0;
+  background:#fff; border-radius:24px 24px 0 0;
+  box-shadow:0 -8px 24px rgba(0,0,0,0.15);
+  z-index:31; padding:12px 20px 24px;
+  max-height:70%; overflow-y:auto;
+  transform:translateY(100%); transition:transform 0.25s ease;
+}
+.bottom-sheet.visible { transform:translateY(0); }
+.sheet-handle { width:40px; height:4px; background:var(--border-input); border-radius:2px; margin:0 auto 16px; }
+</style>
+</head>
+<body>
+<div id="pw-gate" style="position:fixed; inset:0; background:var(--bg); z-index:999; display:flex; align-items:center; justify-content:center; padding:24px;">
+  <div style="background:var(--surface); border-radius:var(--radius-card); padding:32px 24px; width:100%; max-width:320px; text-align:center; box-shadow:var(--shadow);">
+    <div style="font-size:32px; margin-bottom:12px;">🔒</div>
+    <div style="font-weight:800; color:var(--text); margin-bottom:16px;">비밀번호를 입력해주세요</div>
+    <input type="password" id="pw-gate-input" class="input-text" style="text-align:center; margin-bottom:12px;" placeholder="비밀번호" />
+    <button class="btn-primary" id="pw-gate-submit" style="margin-top:0;">입장하기</button>
+    <div id="pw-gate-error" style="color:var(--danger); font-size:13px; margin-top:10px; display:none;">비밀번호가 틀렸어요.</div>
+  </div>
+</div>
+<div class="device">
+  <div class="statusbar"><span>2:41</span><span>📶 📡 🔋</span></div>
+  <div class="screens" id="screens">
+    <div class="screen" data-id="SC-001">
+  <div class="headline">구독번호를 입력해주세요</div>
+  <div class="subtext">델쥬아 구독 시 발급된 번호로 인증합니다. (데모: 00000=조회실패, 99999=해지구독자, 11111=일시적오류, 그 외 숫자=인증 성공)</div>
+  <input type="tel" inputmode="numeric" class="input-text" id="sub-input" placeholder="구독번호 입력" />
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sub-submit" disabled>인증하기</button>
+  <button class="link" id="sub-find">구독번호 확인하기</button>
+  <button class="link" id="sub-cs">고객센터 연결하기</button>
+</div>
+
+<div class="screen" data-id="SC-002">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-accent" style="width:72px;height:72px;font-size:32px;margin:0 auto 20px;">🎉</div>
+  <div class="headline" style="text-align:center;">OOO님, 상상단과 함께할<br/>준비가 됐어요!</div>
+  <div class="subtext" style="text-align:center;">지금부터 나에게 딱 맞는<br/>단백질 목표를 설정해드려요</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc002-start">맞춤 관리 시작하기</button>
+</div>
+
+<div class="screen" data-id="SC-003">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-pink" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">❗</div>
+  <div class="headline" style="text-align:center;">구독번호가 아예 없다면<br/>구독번호를 확인할 수 없어요.</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc003-retry">재입력</button>
+  <button class="btn-secondary" id="sc003-find">찾기</button>
+  <button class="link" id="sc003-cs">고객센터 연결하기</button>
+</div>
+
+<div class="screen" data-id="SC-004">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-pink" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">😮</div>
+  <div class="headline" style="text-align:center;">앗, 구독을<br/>중지하셨네요!</div>
+  <div class="subtext" style="text-align:center;">서비스를 이용하려면 델쥬아<br/>닭가슴살면 구독이 필요합니다.</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc004-buy">구독하러 가기</button>
+  <button class="btn-secondary" id="sc004-retry">다시 입력하기</button>
+</div>
+
+<div class="screen" data-id="SC-005">
+  <div class="spacer"></div>
+  <div class="badge-icon badge-pink" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">⚠️</div>
+  <div class="headline" style="text-align:center;">일시적인 오류가<br/>발생했어요.</div>
+  <div class="subtext" style="text-align:center;">잠시 후 다시<br/>시도해주세요.</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="sc005-retry">다시 입력하기</button>
+  <button class="link" id="sc005-cs">고객센터 연결</button>
+</div>
+<div class="screen" data-id="OB-001">
+  <button class="link" id="ob001-back" style="text-align:left; margin:0;">← 뒤로</button>
+  <button class="skip-link" id="ob001-skip">건너뛰기</button>
+  <div class="spacer"></div>
+  <div id="ob001-slide-1">
+    <div class="badge-icon badge-blue" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">🫀</div>
+    <div class="headline" style="text-align:center;">단백질은 근육만을 위한<br/>영양소가 아닙니다</div>
+    <div class="subtext" style="text-align:center;">몸을 구성하는 핵심 재료.<br/>부족하면 컨디션과 회복력까지 무너집니다</div>
+  </div>
+  <div id="ob001-slide-2" style="display:none;">
+    <div class="badge-icon badge-mint" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">🎯</div>
+    <div class="headline" style="text-align:center;">나에게 맞는 단백질 목표를,<br/>알려드릴게요</div>
+    <div class="subtext" style="text-align:center;">나에게 맞는 하루 목표를 채우며<br/>건강 자산을 하나씩 쌓아보세요</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob001-next">다음</button>
+</div>
+<div class="screen" data-id="OB-002-1">
+  <button class="link" id="ob0021-back" style="text-align:left; margin:0;">← 뒤로</button>
+  <div class="spacer"></div>
+  <div class="badge-icon badge-accent" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">🔔</div>
+  <div class="headline" style="text-align:center;">하루, 한 주 단위로<br/>단백질 섭취 리포트를 보내드려요</div>
+  <div class="subtext" style="text-align:center;">매일 오전 7시에 알림이 와요.<br/>(시간은 언제든 바꿀 수 있어요)</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob0021-allow">허용하기</button>
+  <button class="link" id="ob0021-later">나중에 할게요</button>
+</div>
+<div class="screen" data-id="OB-002-2">
+  <button class="link" id="ob0022-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
+  <div class="headline">신체 정보를 알려주세요</div>
+  <div class="subtext">정확한 단백질 목표 계산에 사용돼요</div>
+  <div style="display:flex; gap:10px; margin-bottom:16px;">
+    <button class="btn-secondary" id="ob0022-male" style="margin-top:0; width:auto; flex:1;">남성</button>
+    <button class="btn-secondary" id="ob0022-female" style="margin-top:0; width:auto; flex:1;">여성</button>
+  </div>
+  <input type="tel" inputmode="numeric" class="input-text" id="ob0022-age" placeholder="나이 (만)" />
+  <input type="tel" inputmode="numeric" class="input-text" id="ob0022-height" placeholder="키 (cm)" />
+  <input type="tel" inputmode="numeric" class="input-text" id="ob0022-weight" placeholder="현재 체중 (kg)" />
+  <div class="subtext" style="margin-bottom:8px;">활동량을 선택해주세요</div>
+  <div id="ob0022-activity-list">
+    <div class="card" data-idx="0"><div class="badge-icon badge-blue">🪑</div><div><div class="card-label">사무직 (활동 거의 없음)</div><div class="card-sub">하루 대부분을 앉아서 보내요</div></div></div>
+    <div class="card" data-idx="1"><div class="badge-icon badge-blue">🚶</div><div><div class="card-label">가벼운 운동 주 1~2회</div><div class="card-sub">가벼운 산책, 스트레칭</div></div></div>
+    <div class="card" data-idx="2"><div class="badge-icon badge-blue">🏃</div><div><div class="card-label">주 3~5회 중강도 운동</div><div class="card-sub">조깅, 필라테스, 수영 등</div></div></div>
+    <div class="card" data-idx="3"><div class="badge-icon badge-blue">🏋️</div><div><div class="card-label">주 6~7회 고강도 운동</div><div class="card-sub">웨이트, 크로스핏, HIIT 등</div></div></div>
+    <div class="card" data-idx="4"><div class="badge-icon badge-blue">🔥</div><div><div class="card-label">매일 고강도 운동+육체노동</div><div class="card-sub">선수급 트레이닝, 현장직 등</div></div></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob0022-next" disabled>다음</button>
+</div>
+
+<div class="screen" data-id="OB-003">
+  <button class="link" id="ob003-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
+  <div class="headline">어떤 목적으로<br/>관리하고 싶으신가요?</div>
+  <div class="subtext">하나만 선택해주세요</div>
+  <div class="card" data-goal="maintain"><div class="badge-icon badge-mint">⚖️</div><div class="card-label">현재 상태 유지</div></div>
+  <div class="card" data-goal="lose"><div class="badge-icon badge-blue">📉</div><div class="card-label">건강한 체중 감량</div></div>
+  <div class="card" data-goal="gain"><div class="badge-icon badge-accent">💪</div><div class="card-label">근력 증가</div></div>
+
+  <div id="ob003-target-weight-section" style="display:none; margin-top:8px;">
+    <div class="subtext" style="margin-bottom:8px;">목표 체중을 알려주세요</div>
+    <input type="tel" inputmode="numeric" class="input-text" id="ob003-target" placeholder="목표 체중 (kg)" />
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" id="ob003-next" style="display:none;" disabled>다음</button>
+</div>
+
+<div class="screen" data-id="OB-005">
+  <div class="spacer"></div>
+  <div style="text-align:center;">
+    <div class="badge-icon badge-accent" style="width:64px;height:64px;font-size:28px;margin:0 auto 20px;">⏳</div>
+    <div class="headline" id="ob005-text">나에게 필요한 단백질을<br/>계산 중이에요</div>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<div class="screen" data-id="OB-006">
+  <button class="link" id="ob006-back" style="text-align:left; margin:0;">← 뒤로</button>
+  <div class="spacer"></div>
+  <div style="text-align:center;">
+    <div class="subtext" style="margin-bottom:4px;">OOO님을 위한 하루 목표예요</div>
+    <div id="ob006-protein" style="font-size:48px; font-weight:800; color:var(--primary);">0g</div>
+    <div class="subtext">단백질</div>
+    <div class="card" style="flex-direction:column; align-items:stretch; text-align:left; margin-top:20px;">
+      <div class="card-sub" style="margin-bottom:8px;">어떻게 계산됐나요?</div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text); margin-bottom:6px;">
+        <span style="color:var(--text-muted);">기준 체중</span>
+        <span id="ob006-calc-weight" style="font-weight:700;">-</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text); margin-bottom:10px;">
+        <span style="color:var(--text-muted);">관리 목적</span>
+        <span id="ob006-calc-goaltype" style="font-weight:700;">-</span>
+      </div>
+      <div style="border-top:1px solid var(--border-input); padding-top:10px; font-size:13px; color:var(--text); font-weight:700; text-align:center;" id="ob006-calc-formula">-</div>
+    </div>
+    <div class="subtext" style="text-align:center; margin-top:12px;">체중·활동량·목적이 바뀌면 목표도 다시 계산돼요.<br/>마이 &gt; 목표 수정에서 변경할 수 있어요.</div>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn-primary" id="ob006-start" href="#" style="display:block; box-sizing:border-box; text-align:center; text-decoration:none;">관리 시작하기</a>
+</div>
+    <!-- SCREENS -->
+  </div>
+  <div class="overlay-backdrop" id="sheet-backdrop"></div>
+  <div class="bottom-sheet" id="info-sheet">
+    <div class="sheet-handle"></div>
+    <div id="info-sheet-body"></div>
+  </div>
+</div>
+<script>
+const S = { onboarding: {}, goals: {} };
+const historyStack = [];
+const onEnter = {};
+
+function openCustomerServiceStub() {
+  alert('고객센터 연결 — 내용 미정');
+}
+
+function goTo(id, opts) {
+  opts = opts || {};
+  document.querySelectorAll('.screen').forEach(function(el){ el.classList.remove('active'); });
+  const el = document.querySelector('.screen[data-id="' + id + '"]');
+  if (!el) return;
+  el.classList.add('active');
+  if (!opts.replace) historyStack.push(id);
+  if (typeof onEnter[id] === 'function') onEnter[id]();
+}
+
+function goBack() {
+  if (historyStack.length > 1) {
+    historyStack.pop();
+    goTo(historyStack[historyStack.length - 1], { replace: true });
+  }
+}
+
+onEnter['SC-001'] = function () {
+  const input = document.getElementById('sub-input');
+  const submit = document.getElementById('sub-submit');
+  input.value = '';
+  submit.disabled = true;
+  input.oninput = function () {
+    const digitsOnly = input.value.replace(/[^0-9]/g, '');
+    input.value = digitsOnly;
+    submit.disabled = digitsOnly.length < 1;
+  };
+  submit.onclick = function () {
+    const v = input.value;
+    if (v === '00000') goTo('SC-003');
+    else if (v === '99999') goTo('SC-004');
+    else if (v === '11111') goTo('SC-005');
+    else goTo('SC-002');
+  };
+  document.getElementById('sub-find').onclick = openFindSubSheet;
+  document.getElementById('sub-cs').onclick = openCustomerServiceStub;
+};
+
+document.getElementById('sc002-start').onclick = function () { goTo('OB-001'); };
+
+function closeInfoSheet() {
+  document.getElementById('info-sheet').classList.remove('visible');
+  document.getElementById('sheet-backdrop').classList.remove('visible');
+}
+document.getElementById('sheet-backdrop').onclick = closeInfoSheet;
+
+function openFindSubSheet() {
+  document.getElementById('info-sheet-body').innerHTML =
+    '<div style="display:flex; align-items:flex-start; justify-content:space-between;">' +
+      '<div class="headline" style="margin:0 0 4px;">구독번호는 어디서<br/>확인하나요?</div>' +
+      '<button id="find-sub-sheet-close" style="background:none; border:none; font-size:18px; color:var(--text-muted); cursor:pointer; padding:4px;">✕</button>' +
+    '</div>' +
+    '<div class="subtext" style="margin-bottom:16px;">델쥬아 구독은 네이버 마이쇼핑을 통해 진행돼요. 주문내역에서 구독번호를 확인할 수 있어요.</div>' +
+    '<button class="btn-primary" id="find-sub-sheet-goto" style="margin-top:0;">네이버 마이쇼핑으로 이동</button>';
+  document.getElementById('find-sub-sheet-close').onclick = closeInfoSheet;
+  document.getElementById('find-sub-sheet-goto').onclick = function () {
+    alert('실제 서비스에서는 인앱 브라우저로 네이버 마이쇼핑 > 정기구독 페이지가 열립니다.');
+    closeInfoSheet();
+  };
+  document.getElementById('info-sheet').classList.add('visible');
+  document.getElementById('sheet-backdrop').classList.add('visible');
+}
+
+document.getElementById('sc003-retry').onclick = function () { goTo('SC-001'); };
+document.getElementById('sc003-find').onclick = function () {
+  alert('실제 서비스에서는 인앱 브라우저로 네이버 신청정보 페이지가 열립니다.');
+};
+document.getElementById('sc003-cs').onclick = openCustomerServiceStub;
+
+document.getElementById('sc004-buy').onclick = function () {
+  alert('실제 서비스에서는 네이버 스토어 델쥬아 구독 상품 페이지로 이동합니다.');
+};
+document.getElementById('sc004-retry').onclick = function () { goTo('SC-001'); };
+
+document.getElementById('sc005-retry').onclick = function () { goTo('SC-001'); };
+document.getElementById('sc005-cs').onclick = openCustomerServiceStub;
+
+onEnter['OB-001'] = function () {
+  let step = 1;
+  const slide1 = document.getElementById('ob001-slide-1');
+  const slide2 = document.getElementById('ob001-slide-2');
+  const next = document.getElementById('ob001-next');
+  slide1.style.display = '';
+  slide2.style.display = 'none';
+  next.textContent = '다음';
+  next.onclick = function () {
+    if (step === 1) {
+      step = 2;
+      slide1.style.display = 'none';
+      slide2.style.display = '';
+      next.textContent = '다음';
+    } else {
+      goTo('OB-002-1');
+    }
+  };
+  document.getElementById('ob001-skip').onclick = function () { goTo('OB-002-1'); };
+  document.getElementById('ob001-back').onclick = goBack;
+};
+
+document.getElementById('ob0021-allow').onclick = function () { goTo('OB-002-2'); };
+document.getElementById('ob0021-later').onclick = function () { goTo('OB-002-2'); };
+document.getElementById('ob0021-back').onclick = goBack;
+
+onEnter['OB-002-2'] = function () {
+  const maleBtn = document.getElementById('ob0022-male');
+  const femaleBtn = document.getElementById('ob0022-female');
+  const ageInput = document.getElementById('ob0022-age');
+  const heightInput = document.getElementById('ob0022-height');
+  const weightInput = document.getElementById('ob0022-weight');
+  const next = document.getElementById('ob0022-next');
+  const cards = document.querySelectorAll('#ob0022-activity-list .card');
+  let selectedGender = null;
+  let selectedActivity = null;
+
+  function refreshNextState() {
+    const ready = selectedGender && selectedActivity !== null &&
+      ageInput.value.length > 0 && heightInput.value.length > 0 && weightInput.value.length > 0;
+    next.disabled = !ready;
+  }
+
+  function selectGender(g) {
+    selectedGender = g;
+    maleBtn.style.background = g === 'male' ? 'var(--primary)' : 'transparent';
+    maleBtn.style.color = g === 'male' ? '#fff' : 'var(--primary)';
+    femaleBtn.style.background = g === 'female' ? 'var(--primary)' : 'transparent';
+    femaleBtn.style.color = g === 'female' ? '#fff' : 'var(--primary)';
+    refreshNextState();
+  }
+  maleBtn.onclick = function () { selectGender('male'); };
+  femaleBtn.onclick = function () { selectGender('female'); };
+
+  [ageInput, heightInput, weightInput].forEach(function (el) {
+    el.oninput = function () {
+      el.value = el.value.replace(/[^0-9]/g, '');
+      refreshNextState();
+    };
+  });
+
+  cards.forEach(function (card) {
+    card.onclick = function () {
+      cards.forEach(function (c) { c.style.outline = 'none'; });
+      card.style.outline = '2px solid var(--primary)';
+      selectedActivity = parseInt(card.getAttribute('data-idx'), 10);
+      refreshNextState();
+    };
+  });
+
+  next.onclick = function () {
+    S.onboarding.gender = selectedGender;
+    S.onboarding.age = parseInt(ageInput.value, 10);
+    S.onboarding.height = parseInt(heightInput.value, 10);
+    S.onboarding.weight = parseInt(weightInput.value, 10);
+    S.onboarding.activity = selectedActivity;
+    goTo('OB-003');
+  };
+
+  document.getElementById('ob0022-back').onclick = goBack;
+};
+
+onEnter['OB-003'] = function () {
+  const cards = document.querySelectorAll('#screens .screen[data-id="OB-003"] .card');
+  const targetSection = document.getElementById('ob003-target-weight-section');
+  const targetInput = document.getElementById('ob003-target');
+  const next = document.getElementById('ob003-next');
+
+  targetSection.style.display = 'none';
+  next.style.display = 'none';
+  next.disabled = true;
+  targetInput.value = '';
+  cards.forEach(function (c) { c.style.outline = 'none'; });
+
+  cards.forEach(function (card) {
+    card.onclick = function () {
+      cards.forEach(function (c) { c.style.outline = 'none'; });
+      card.style.outline = '2px solid var(--primary)';
+      const goal = card.getAttribute('data-goal');
+      S.onboarding.goalType = goal;
+      next.style.display = 'block';
+      if (goal === 'maintain') {
+        targetSection.style.display = 'none';
+        next.disabled = false;
+      } else {
+        targetSection.style.display = 'block';
+        next.disabled = targetInput.value.length < 1;
+      }
+    };
+  });
+
+  targetInput.oninput = function () {
+    targetInput.value = targetInput.value.replace(/[^0-9]/g, '');
+    if (S.onboarding.goalType !== 'maintain') {
+      next.disabled = targetInput.value.length < 1;
+    }
+  };
+
+  next.onclick = function () {
+    if (S.onboarding.goalType === 'maintain') {
+      S.onboarding.targetWeight = S.onboarding.weight;
+    } else {
+      S.onboarding.targetWeight = parseInt(targetInput.value, 10);
+    }
+    goTo('OB-005', { replace: true });
+  };
+
+  document.getElementById('ob003-back').onclick = goBack;
+};
+
+const ACTIVITY_FACTORS = [1.2, 1.375, 1.55, 1.725, 1.9];
+const GOAL_TYPE_LABEL = { maintain: '현재 상태 유지', lose: '건강한 체중 감량', gain: '근력 증가' };
+
+function calcBMR(o) {
+  if (o.gender === 'male') {
+    return 88.362 + 13.397 * o.weight + 4.799 * o.height - 5.677 * o.age;
+  }
+  return 447.593 + 9.247 * o.weight + 3.098 * o.height - 4.330 * o.age;
+}
+
+function calcGoals(o) {
+  const bmr = calcBMR(o);
+  const tdee = bmr * ACTIVITY_FACTORS[o.activity];
+  let kcal;
+  if (o.goalType === 'maintain') {
+    kcal = tdee;
+  } else if (o.goalType === 'lose') {
+    const diff = Math.abs(o.weight - o.targetWeight);
+    kcal = tdee * (diff <= 4.5 ? 0.85 : 0.75);
+  } else {
+    kcal = tdee * 1.15;
+  }
+
+  let proteinG, carbG;
+  if (o.goalType === 'maintain') {
+    const proteinPerKg = o.age >= 40 ? 1.9 : 1.2;
+    proteinG = Math.round(o.weight * proteinPerKg);
+    carbG = Math.min(130, Math.max(90, proteinG));
+  } else if (o.goalType === 'lose') {
+    proteinG = Math.round(o.targetWeight * 1.8);
+    carbG = 90;
+  } else {
+    proteinG = Math.round(o.targetWeight * 2.2);
+    carbG = Math.round(o.targetWeight * 3.1);
+  }
+
+  const proteinKcal = proteinG * 4;
+  const carbKcal = carbG * 4;
+  const fatKcal = Math.max(kcal - proteinKcal - carbKcal, 0);
+  const fatG = Math.round(fatKcal / 9);
+
+  return { protein: proteinG, kcal: Math.round(kcal), carb: carbG, fat: fatG };
+}
+
+onEnter['OB-005'] = function () {
+  const textEl = document.getElementById('ob005-text');
+  const steps = [
+    '나에게 필요한 단백질을<br/>계산 중이에요',
+    '거의 다 완료했어요!'
+  ];
+  let i = 0;
+  textEl.innerHTML = steps[0];
+  const timer = setInterval(function () {
+    i++;
+    if (i < steps.length) {
+      textEl.innerHTML = steps[i];
+    } else {
+      clearInterval(timer);
+      S.goals = calcGoals(S.onboarding);
+      goTo('OB-006');
+    }
+  }, 700);
+};
+
+onEnter['OB-006'] = function () {
+  document.getElementById('ob006-back').onclick = goBack;
+  document.getElementById('ob006-protein').textContent = S.goals.protein + 'g';
+
+  const o = S.onboarding;
+  const isMaintain = o.goalType === 'maintain';
+  const baseWeight = isMaintain ? o.weight : o.targetWeight;
+  const weightLabel = isMaintain ? '현재 체중' : '목표 체중';
+  const multiplier = o.goalType === 'maintain' ? (o.age >= 40 ? 1.9 : 1.2) : (o.goalType === 'lose' ? 1.8 : 2.2);
+  const rawProtein = baseWeight * multiplier;
+
+  document.getElementById('ob006-calc-weight').textContent = weightLabel + ' ' + baseWeight + 'kg';
+  document.getElementById('ob006-calc-goaltype').textContent = GOAL_TYPE_LABEL[o.goalType];
+  document.getElementById('ob006-calc-formula').textContent =
+    baseWeight + 'kg × ' + multiplier + 'g/kg = ' + (Math.round(rawProtein * 10) / 10) + 'g';
+
+  const params = new URLSearchParams({
+    protein: S.goals.protein,
+    kcal: S.goals.kcal,
+    carb: S.goals.carb,
+    fat: S.goals.fat,
+    goalType: S.onboarding.goalType
+  });
+  document.getElementById('ob006-start').href =
+    './홈_이후_와이어프레임_v6.html?' + params.toString();
+};
+
+(function () {
+  const PASSWORD = 'sangsang';
+  const gate = document.getElementById('pw-gate');
+  const input = document.getElementById('pw-gate-input');
+  const submit = document.getElementById('pw-gate-submit');
+  const error = document.getElementById('pw-gate-error');
+  if (sessionStorage.getItem('sang-wireframe-unlocked') === '1') {
+    gate.style.display = 'none';
+  }
+  function tryUnlock() {
+    if (input.value === PASSWORD) {
+      sessionStorage.setItem('sang-wireframe-unlocked', '1');
+      gate.style.display = 'none';
+    } else {
+      error.style.display = 'block';
+    }
+  }
+  submit.onclick = tryUnlock;
+  input.onkeydown = function (e) { if (e.key === 'Enter') tryUnlock(); };
+})();
+
+/* HANDLERS */
+
+goTo('SC-001');
+</script>
+</body>
+</html>
