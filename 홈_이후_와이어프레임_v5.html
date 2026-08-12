@@ -288,6 +288,7 @@ body {
       <button class="link" id="r001-close" style="text-align:left; margin:0 0 8px;">← 닫기</button>
       <div style="display:flex; gap:8px; margin-bottom:16px;">
         <button class="btn-secondary" id="r001-tab-search" style="margin:0; width:auto; flex:1;">검색</button>
+        <button class="btn-secondary" id="r001-tab-direct" style="margin:0; width:auto; flex:1;">직접입력</button>
         <button class="btn-secondary" id="r001-tab-fav" style="margin:0; width:auto; flex:1;">자주먹는</button>
       </div>
       <div id="r001-content"></div>
@@ -315,14 +316,16 @@ body {
 
     <div class="screen" data-id="R-500">
       <button class="link" id="r500-back" style="text-align:left; margin:0 0 8px;">← 뒤로</button>
-      <div class="headline">기록 확인</div>
+      <div class="headline">끼니 등록 하기</div>
       <div id="r500-list"></div>
       <div class="subtext">끼니</div>
-      <select class="input-text" id="r500-meal">
-        <option value="">끼니를 선택하세요</option>
-        <option>아침</option><option>점심</option>
-        <option>저녁</option><option>간식</option><option>야식</option>
-      </select>
+      <div id="r500-meal-chips" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-bottom:16px;">
+        <button type="button" class="time-pill" data-meal="아침" style="padding:12px 4px;">아침</button>
+        <button type="button" class="time-pill" data-meal="점심" style="padding:12px 4px;">점심</button>
+        <button type="button" class="time-pill" data-meal="저녁" style="padding:12px 4px;">저녁</button>
+        <button type="button" class="time-pill" data-meal="간식" style="padding:12px 4px;">간식</button>
+        <button type="button" class="time-pill" data-meal="야식" style="padding:12px 4px;">야식</button>
+      </div>
       <div class="subtext">메모 (선택)</div>
       <input type="text" class="input-text" id="r500-memo" placeholder="메모를 남겨보세요" />
       <div class="spacer"></div>
@@ -2060,6 +2063,8 @@ const RECORD_TABS = { search: 'R-100', direct: 'R-200', fav: 'R-300' };
 function switchRecordTab(name) {
   document.getElementById('r001-tab-search').style.background = name === 'search' ? 'var(--primary)' : 'transparent';
   document.getElementById('r001-tab-search').style.color = name === 'search' ? '#fff' : 'var(--primary)';
+  document.getElementById('r001-tab-direct').style.background = name === 'direct' ? 'var(--primary)' : 'transparent';
+  document.getElementById('r001-tab-direct').style.color = name === 'direct' ? '#fff' : 'var(--primary)';
   document.getElementById('r001-tab-fav').style.background = name === 'fav' ? 'var(--primary)' : 'transparent';
   document.getElementById('r001-tab-fav').style.color = name === 'fav' ? '#fff' : 'var(--primary)';
   const content = document.getElementById('r001-content');
@@ -2072,6 +2077,7 @@ const onRecordTab = {};
 onEnter['R-001'] = function () {
   switchRecordTab('search');
   document.getElementById('r001-tab-search').onclick = function () { switchRecordTab('search'); };
+  document.getElementById('r001-tab-direct').onclick = function () { switchRecordTab('direct'); };
   document.getElementById('r001-tab-fav').onclick = function () { switchRecordTab('fav'); };
   document.getElementById('r001-close').onclick = function () { goTo('HM-001'); };
 };
@@ -2140,7 +2146,7 @@ onRecordTab.search = function () {
     const q = input.value.trim();
     if (q === '') {
       const recent = getRecentFoods(5);
-      results.innerHTML = '<div class="subtext" style="margin:0 0 8px;">최근 기록</div>' +
+      results.innerHTML = '<div class="subtext" style="margin:0 0 8px;">최근 등록</div>' +
         (recent.length === 0
           ? '<div class="card-sub" style="padding:12px 0;">아직 기록한 음식이 없어요</div>'
           : foodCardHtml(recent));
@@ -2169,29 +2175,50 @@ onRecordTab.direct = function () {
   const root = document.getElementById('record-subscreen-direct');
   const prefill = directPrefillName;
   directPrefillName = '';
+  let qty = 1;
   root.innerHTML =
-    '<button class="link" id="r200-back" style="text-align:left; margin:0 0 8px;">← 검색으로 돌아가기</button>' +
-    '<input type="text" class="input-text" id="r200-name" placeholder="음식명" value="' + prefill.replace(/"/g, '&quot;') + '" />' +
-    '<input type="tel" inputmode="numeric" class="input-text" id="r200-protein" placeholder="단백질(g)" />' +
+    '<input type="text" class="input-text" id="r200-name" placeholder="식품명" value="' + prefill.replace(/"/g, '&quot;') + '" />' +
+    '<div class="subtext">수량</div>' +
+    '<div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">' +
+    '<button class="btn-secondary" id="r200-qty-minus" style="margin:0; width:44px; flex:none; padding:10px;">−</button>' +
+    '<div id="r200-qty-value" style="flex:1; text-align:center; font-size:18px; font-weight:700; color:var(--text);">1</div>' +
+    '<button class="btn-secondary" id="r200-qty-plus" style="margin:0; width:44px; flex:none; padding:10px;">＋</button>' +
+    '</div>' +
+    '<input type="tel" inputmode="numeric" class="input-text" id="r200-protein" placeholder="단백질(g) (필수)" />' +
+    '<input type="tel" inputmode="numeric" class="input-text" id="r200-amount" placeholder="중량(g)" />' +
     '<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:var(--text); font-size:14px;">' +
-    '<input type="checkbox" id="r200-fav" /> ⭐ 자주먹는 목록에 등록</label>' +
+    '<input type="checkbox" id="r200-fav" checked /> ⭐ 자주먹는 목록에 등록/해제</label>' +
     '<button class="btn-primary" id="r200-add" disabled>담기</button>';
-  document.getElementById('r200-back').onclick = function () { switchRecordTab('search'); };
+  const qtyValueEl = document.getElementById('r200-qty-value');
   const nameInput = document.getElementById('r200-name');
   const proteinInput = document.getElementById('r200-protein');
+  const amountInput = document.getElementById('r200-amount');
   const addBtn = document.getElementById('r200-add');
   function refresh() {
     addBtn.disabled = nameInput.value.trim().length === 0 || proteinInput.value.length === 0;
   }
+  document.getElementById('r200-qty-minus').onclick = function () {
+    if (qty <= 1) return;
+    qty--;
+    qtyValueEl.textContent = String(qty);
+  };
+  document.getElementById('r200-qty-plus').onclick = function () {
+    qty++;
+    qtyValueEl.textContent = String(qty);
+  };
   nameInput.oninput = refresh;
   proteinInput.oninput = function () {
     proteinInput.value = proteinInput.value.replace(/[^0-9]/g, '');
     refresh();
   };
+  amountInput.oninput = function () {
+    amountInput.value = amountInput.value.replace(/[^0-9]/g, '');
+  };
   addBtn.onclick = function () {
     const name = nameInput.value.trim();
     const protein = parseInt(proteinInput.value, 10) || 0;
-    addToCart({ name: name, protein: protein, amount: null });
+    const amount = parseInt(amountInput.value, 10) || null;
+    addToCart({ name: name, protein: protein * qty, amount: amount, unitProtein: protein, qty: qty });
     if (document.getElementById('r200-fav').checked) {
       S.favorites.push({ name: name, protein: protein });
     }
@@ -2228,6 +2255,7 @@ function openCartItemEdit(item) {
 }
 
 onEnter['R-102'] = function () {
+  document.getElementById('r102-name').textContent = editingFood.name + (editingCartId !== null ? ' ✏️' : '');
   let qty = editingFood.qty || 1;
   const qtyValueEl = document.getElementById('r102-qty-value');
   const proteinInput = document.getElementById('r102-protein');
@@ -2382,23 +2410,52 @@ function closeCartSheet() {
 
 document.getElementById('sheet-backdrop').onclick = closeCartSheet;
 
+function openR500ExitConfirm() {
+  if (S.cart.length === 0) { goBack(); return; }
+  document.getElementById('feedback-popup').innerHTML =
+    '<div class="popup-card" style="text-align:center;">' +
+      '<div class="badge-icon badge-pink" style="width:56px; height:56px; font-size:24px; margin:0 auto 16px;">❗</div>' +
+      '<div class="headline" style="margin-bottom:6px;">작성을 그만둘까요?</div>' +
+      '<div class="subtext" style="margin-bottom:20px;">지금 나가면 입력한 내용이 저장되지 않아요.</div>' +
+      '<div style="display:flex; gap:8px;">' +
+        '<button class="btn-secondary" id="r500-exit-stay" style="margin:0; width:auto; flex:1;">계속 작성</button>' +
+        '<button class="btn-primary" id="r500-exit-leave" style="margin:0; width:auto; flex:1;">나가기</button>' +
+      '</div>' +
+    '</div>';
+  document.getElementById('feedback-popup').classList.add('visible');
+  document.getElementById('r500-exit-stay').onclick = function () {
+    document.getElementById('feedback-popup').classList.remove('visible');
+  };
+  document.getElementById('r500-exit-leave').onclick = function () {
+    document.getElementById('feedback-popup').classList.remove('visible');
+    goBack();
+  };
+}
+
 onEnter['R-500'] = function () {
-  document.getElementById('r500-back').onclick = function () { goBack(); };
+  document.getElementById('r500-back').onclick = openR500ExitConfirm;
   const listEl = document.getElementById('r500-list');
   const totalProtein = S.cart.reduce(function (sum, item) { return sum + item.protein; }, 0);
   listEl.innerHTML = S.cart.map(function (item) {
     return '<div class="card"><div class="badge-icon badge-blue">🍽</div><div class="card-label">' + item.name + '</div><div class="card-sub">' + item.protein + 'g</div></div>';
   }).join('') +
     '<div class="card" style="background:var(--badge-accent-bg); box-shadow:none;"><div class="badge-icon badge-accent">Σ</div><div class="card-label">총 단백질 ' + (Math.round(totalProtein * 10) / 10) + 'g</div></div>';
-  const mealSelect = document.getElementById('r500-meal');
+  let selectedMeal = '';
+  const mealChips = document.querySelectorAll('#r500-meal-chips .time-pill');
   const memoInput = document.getElementById('r500-memo');
   const submit = document.getElementById('r500-submit');
-  mealSelect.value = '';
   memoInput.value = '';
   submit.disabled = true;
-  mealSelect.onchange = function () { submit.disabled = mealSelect.value === ''; };
+  mealChips.forEach(function (chip) {
+    chip.classList.remove('selected');
+    chip.onclick = function () {
+      selectedMeal = chip.getAttribute('data-meal');
+      mealChips.forEach(function (c) { c.classList.toggle('selected', c === chip); });
+      submit.disabled = false;
+    };
+  });
   submit.onclick = function () {
-    const meal = mealSelect.value;
+    const meal = selectedMeal;
     const addedItems = S.cart.slice();
     const targetDateKey = S.selectedDateKey;
     if (!S.mealsByDate[targetDateKey]) S.mealsByDate[targetDateKey] = [];
